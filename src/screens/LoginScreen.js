@@ -7,11 +7,14 @@ export default function LoginScreen({ navigation }) {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch("https://football-predictor-im87.onrender.com", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        "https://football-predictor-im87.onrender.com/auth/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await response.json();
 
@@ -19,9 +22,12 @@ export default function LoginScreen({ navigation }) {
         return Alert.alert("Login Error", data.error || "Something went wrong");
       }
 
-      Alert.alert("Success", "Logged in successfully!");
+      // Here you can save the token in state or AsyncStorage for future API calls
+      const token = data.token;
+      console.log("JWT Token:", token);
 
-      navigation.navigate("Fixtures"); 
+      Alert.alert("Success", "Logged in successfully!");
+      navigation.navigate("Fixtures", { token }); // pass token to fixtures if needed
     } catch (err) {
       Alert.alert("Error", "Cannot connect to backend");
       console.log(err);
@@ -37,6 +43,7 @@ export default function LoginScreen({ navigation }) {
         style={styles.input}
         value={email}
         onChangeText={setEmail}
+        autoCapitalize="none"
       />
 
       <TextInput
@@ -78,4 +85,3 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: "white", textAlign: "center", fontWeight: "600" },
 });
-
