@@ -15,11 +15,16 @@ const Stack = createNativeStackNavigator();
 export default function App() {
 
   useEffect(() => {
-    Alert.alert(
-      "Welcome to MyFootyAi ⚽",
-      "• Select games from each gameweek\n• Your AI friend fetches the stats\n• Get predictions on how the match can go",
-      [{ text: "Let's go!" }]
-    );
+    // Delay slightly to make sure app is ready
+    const timeout = setTimeout(() => {
+      Alert.alert(
+        "Welcome to MyFootyAi ⚽",
+        "• Select games from each gameweek\n• Your AI friend fetches the stats\n• Get predictions on how the match can go",
+        [{ text: "Let's go!" }]
+      );
+    }, 500); // half-second delay
+
+    return () => clearTimeout(timeout);
   }, []);
 
   return (
