@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { API_URL } from "../../App";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function FixturesScreen({ navigation }) {
   const [fixtures, setFixtures] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(null);
 
   useEffect(() => {
     const fetchFixtures = async () => {
@@ -19,19 +21,41 @@ export default function FixturesScreen({ navigation }) {
       }
     };
 
+    const getToken = async () => {
+      const savedToken = await AsyncStorage.getItem("userToken");
+      setToken(savedToken);
+    };
+
     fetchFixtures();
+    getToken();
   }, []);
+
+  const handlePredict = (fixture) => {
+    if (!token) {
+      Alert.alert(
+        "Login Required",
+        "You must be logged in to get a prediction.",
+        [
+          { text: "Cancel" },
+          { text: "Login/Register", onPress: () => navigation.navigate("Login") },
+        ]
+      );
+      return;
+    }
+
+    navigation.navigate("Prediction", { fixture: fixture.teams, date: new Date(fixture.fixture.date).toLocaleString(), token });
+  };
 
   const renderItem = ({ item }) => {
     const matchDate = new Date(item.fixture.date).toLocaleString();
     return (
-      <TouchableOpacity
-        style={styles.matchBox}
-        onPress={() => navigation.navigate("Prediction", { fixture: item.teams, date: matchDate })}
-      >
+      <View style={styles.matchBox}>
         <Text style={styles.matchText}>{item.teams.home.name} vs {item.teams.away.name}</Text>
         <Text style={styles.dateText}>{matchDate}</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => handlePredict(item)}>
+          <Text style={styles.buttonText}>Get Prediction</Text>
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -39,6 +63,13 @@ export default function FixturesScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* Login/Register button at top right */}
+      {!token && (
+        <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate("Login")}>
+          <Text style={styles.loginButtonText}>Login/Register</Text>
+        </TouchableOpacity>
+      )}
+
       <FlatList
         data={fixtures}
         keyExtractor={(item) => item.fixture.id.toString()}
@@ -61,4 +92,22 @@ const styles = StyleSheet.create({
   },
   matchText: { fontWeight: "bold", fontSize: 16, color: "#333" },
   dateText: { marginTop: 4, fontSize: 14, color: "#555" },
+  button: {
+    backgroundColor: "#333",
+    padding: 10,
+    borderRadius: 6,
+    marginTop: 10,
+  },
+  buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
+  loginButton: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    backgroundColor: "#555",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    zIndex: 1,
+  },
+  loginButtonText: { color: "white", fontSize: 12, fontWeight: "bold" },
 });
