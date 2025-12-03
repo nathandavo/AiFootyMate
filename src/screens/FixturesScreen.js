@@ -1,91 +1,89 @@
-import { useState, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from "react-native";
+import { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from "react-native";
 
 export default function FixturesScreen({ navigation }) {
   const [fixtures, setFixtures] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setFixtures(FIXTURE_DATA); // Replace with API later
+    fetchFixtures();
   }, []);
+
+  const fetchFixtures = async () => {
+    try {
+      const response = await fetch("https://football-predictor-im87.onrender.com/fixtures");
+      const data = await response.json();
+      setFixtures(data);
+    } catch (err) {
+      console.log("Error fetching fixtures:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSelectMatch = async (match) => {
     try {
-      setLoading(true);
-
-      const response = await fetch("https://football-predictor-im87.onrender.com/predict", {
+      const response = await fetch("https://football-predictor-im87.onrender.com/predict/free", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          home: match.teams.home.name,
-          away: match.teams.away.name,
           fixtureId: match.fixture.id,
+          homeTeam: match.teams.home.name,
+          awayTeam: match.teams.away.name,
         }),
       });
 
       const data = await response.json();
-      setLoading(false);
 
       navigation.navigate("Prediction", {
         match,
-        prediction: data.prediction, // ← what your backend returns
+        prediction: data.prediction,
       });
-
     } catch (err) {
-      setLoading(false);
-      alert("Error contacting prediction server");
-      console.log(err);
+      console.log("Prediction error:", err);
     }
   };
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card} onPress={() => handleSelectMatch(item)}>
-      <View style={styles.row}>
-        <View style={styles.teamBlock}>
-          <Image source={{ uri: item.teams.home.logo }} style={styles.logo} />
-          <Text style={styles.teamName}>{item.teams.home.name}</Text>
-        </View>
-
-        <Text style={styles.vs}>VS</Text>
-
-        <View style={styles.teamBlock}>
-          <Image source={{ uri: item.teams.away.logo }} style={styles.logo} />
-          <Text style={styles.teamName}>{item.teams.away.name}</Text>
-        </View>
-      </View>
-
-      <Text style={styles.date}>{new Date(item.fixture.date).toLocaleString()}</Text>
-    </TouchableOpacity>
-  );
+  if (loading) {
+    return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Upcoming Fixtures</Text>
-
-      {loading && <ActivityIndicator size="large" style={{ marginBottom: 20 }} />}
+      <Text style={styles.title}>Gameweek Fixtures</Text>
 
       <FlatList
         data={fixtures}
         keyExtractor={(item) => item.fixture.id.toString()}
-        renderItem={renderItem}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => handleSelectMatch(item)}
+          >
+            <Text style={styles.teams}>
+              {item.teams.home.name} vs {item.teams.away.name}
+            </Text>
+            <Text style={styles.date}>
+              {new Date(item.fixture.date).toLocaleString()}
+            </Text>
+          </TouchableOpacity>
+        )}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 18, backgroundColor: "#fff" },
-  title: { fontSize: 26, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
-  card: { padding: 14, borderWidth: 1, borderColor: "#ddd", borderRadius: 8, marginBottom: 12 },
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  teamBlock: { alignItems: "center", width: "35%" },
-  teamName: { marginTop: 5, fontSize: 15, fontWeight: "500", textAlign: "center" },
-  logo: { width: 50, height: 50 },
-  vs: { fontSize: 18, fontWeight: "bold" },
-  date: { marginTop: 10, textAlign: "center", fontSize: 14, color: "#555" },
-});
+  container: { flex: 1, padding: 20 },
+  title: { fontSize: 28, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
 
-// your JSON data
-const FIXTURE_DATA = [
-  // paste your fixtures here
-];
+  card: {
+    padding: 15,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    marginBottom: 12,
+  },
+
+  teams: { fontSize: 18, fontWeight: "600" },
+  date: { marginTop: 4, color: "#555" },
+});
