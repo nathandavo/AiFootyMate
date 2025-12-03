@@ -35,6 +35,14 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* Back to Fixtures button */}
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate("Fixtures")}
+      >
+        <Text style={styles.backButtonText}>Back to Fixtures</Text>
+      </TouchableOpacity>
+
       <Text style={styles.title}>Football Predictor</Text>
 
       <View style={styles.inputBox}>
@@ -75,19 +83,32 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f2f2f2", // light grey background for slick design
+    backgroundColor: "#f2f2f2", 
     justifyContent: "center",
     padding: 24,
+  },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 20,
+    backgroundColor: "#555",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  backButtonText: {
+    color: "#fff",
+    fontWeight: "600",
   },
   title: {
     fontSize: 32,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 28,
-    color: "#222", // darker grey title
+    color: "#222",
   },
   inputBox: {
-    backgroundColor: "#e0e0e0", // slightly darker grey box
+    backgroundColor: "#e0e0e0",
     borderColor: "#999",
     borderWidth: 1,
     borderRadius: 8,
@@ -99,7 +120,7 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   button: {
-    backgroundColor: "#555", // dark grey button
+    backgroundColor: "#555",
     padding: 14,
     borderRadius: 8,
     marginTop: 10,
