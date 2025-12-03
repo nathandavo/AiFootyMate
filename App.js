@@ -1,40 +1,82 @@
-import { useEffect } from "react";
-import { Alert } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import LoginScreen from "./src/screens/LoginScreen";
-import RegisterScreen from "./src/screens/RegisterScreen";
-import FixturesScreen from "./src/screens/FixturesScreen";
-import PredictionScreen from "./src/screens/PredictionScreen";
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 
-// 🔥 Your backend URL (local or deployed)
-export const API_URL = "https://football-predictor-im87.onrender.com";  
-
-const Stack = createNativeStackNavigator();
-
-export default function App() {
-
-  useEffect(() => {
-    // Delay slightly to make sure app is ready
-    const timeout = setTimeout(() => {
-      Alert.alert(
-        "Welcome to MyFootyAi ⚽",
-        "• Select games from each gameweek\n• Your AI friend fetches the stats\n• Get predictions on how the match can go",
-        [{ text: "Let's go!" }]
-      );
-    }, 500); // half-second delay
-
-    return () => clearTimeout(timeout);
-  }, []);
-
+export default function WelcomeScreen({ navigation }) {
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="Fixtures" component={FixturesScreen} />
-        <Stack.Screen name="Prediction" component={PredictionScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>🎯 Welcome to MyFootyAiMate!</Text>
+      <Text style={styles.subtitle}>Your ultimate Premier League prediction companion.</Text>
+
+      <View style={styles.bulletContainer}>
+        <Text style={styles.bullet}>• Select Upcoming Matches 🏟️</Text>
+        <Text style={styles.bulletText}>Pick the Premier League games you want insights on.</Text>
+
+        <Text style={styles.bullet}>• Instant Stats Fetch 📊</Text>
+        <Text style={styles.bulletText}>We pull all the latest team & player stats automatically.</Text>
+
+        <Text style={styles.bullet}>• AI-Powered Predictions 🤖</Text>
+        <Text style={styles.bulletText}>Get data-driven predictions for every selected match.</Text>
+
+        <Text style={styles.bullet}>• Make Smarter Bets & Fantasy Picks 💡</Text>
+        <Text style={styles.bulletText}>Use our insights to improve your football decisions.</Text>
+
+        <Text style={styles.bullet}>• Easy & Intuitive ✅</Text>
+        <Text style={styles.bulletText}>Simple interface. Just select, fetch, and see your predictions.</Text>
+      </View>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.replace("Fixtures")}
+      >
+        <Text style={styles.buttonText}>Okay</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 24,
+    flexGrow: 1,
+    justifyContent: "center",
+    backgroundColor: "#f2f2f2",
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 16,
+    marginBottom: 24,
+    textAlign: "center",
+    color: "#555",
+  },
+  bulletContainer: {
+    marginBottom: 30,
+  },
+  bullet: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginTop: 12,
+    color: "#333",
+  },
+  bulletText: {
+    fontSize: 14,
+    marginLeft: 12,
+    color: "#666",
+  },
+  button: {
+    backgroundColor: "#555",
+    padding: 14,
+    borderRadius: 6,
+    alignSelf: "center",
+    minWidth: 120,
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "600",
+    textAlign: "center",
+  },
+});
