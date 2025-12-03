@@ -22,12 +22,11 @@ export default function LoginScreen({ navigation }) {
         return Alert.alert("Login Error", data.error || "Something went wrong");
       }
 
-      // Here you can save the token in state or AsyncStorage for future API calls
       const token = data.token;
       console.log("JWT Token:", token);
 
       Alert.alert("Success", "Logged in successfully!");
-      navigation.navigate("Fixtures", { token }); // pass token to fixtures if needed
+      navigation.navigate("Fixtures", { token });
     } catch (err) {
       Alert.alert("Error", "Cannot connect to backend");
       console.log(err);
@@ -38,28 +37,34 @@ export default function LoginScreen({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.title}>Football Predictor</Text>
 
-      <TextInput
-        placeholder="Email"
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-      />
+      <View style={styles.inputBox}>
+        <TextInput
+          placeholder="Email"
+          placeholderTextColor="#999"
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+        />
+      </View>
 
-      <TextInput
-        placeholder="Password"
-        secureTextEntry
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-      />
+      <View style={styles.inputBox}>
+        <TextInput
+          placeholder="Password"
+          placeholderTextColor="#999"
+          secureTextEntry
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+        />
+      </View>
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log In</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-        <Text style={{ marginTop: 18, textAlign: "center" }}>
+        <Text style={styles.registerText}>
           Create an account
         </Text>
       </TouchableOpacity>
@@ -68,20 +73,46 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 24 },
-  title: { fontSize: 32, fontWeight: "bold", textAlign: "center", marginBottom: 28 },
-  input: {
+  container: {
+    flex: 1,
+    backgroundColor: "#f2f2f2", // light grey background for slick design
+    justifyContent: "center",
+    padding: 24,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 28,
+    color: "#222", // darker grey title
+  },
+  inputBox: {
+    backgroundColor: "#e0e0e0", // slightly darker grey box
+    borderColor: "#999",
     borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    borderRadius: 6,
+    borderRadius: 8,
     marginBottom: 12,
+    paddingHorizontal: 10,
+  },
+  input: {
+    height: 48,
+    color: "#000",
   },
   button: {
-    backgroundColor: "black",
+    backgroundColor: "#555", // dark grey button
     padding: 14,
-    borderRadius: 6,
+    borderRadius: 8,
     marginTop: 10,
   },
-  buttonText: { color: "white", textAlign: "center", fontWeight: "600" },
+  buttonText: {
+    color: "white",
+    textAlign: "center",
+    fontWeight: "600",
+  },
+  registerText: {
+    marginTop: 18,
+    textAlign: "center",
+    color: "#333",
+    fontWeight: "500",
+  },
 });
