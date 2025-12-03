@@ -6,6 +6,10 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState("");
 
   const handleRegister = async () => {
+    if (!email || !password) {
+      return Alert.alert("Error", "Please enter both email and password");
+    }
+
     try {
       const response = await fetch(
         "https://football-predictor-im87.onrender.com/auth/register",
@@ -22,15 +26,16 @@ export default function RegisterScreen({ navigation }) {
         return Alert.alert("Registration Error", data.error || "Something went wrong");
       }
 
-      // Save the JWT token if returned, or just alert success
-      const token = data.token;
-      console.log("JWT Token:", token);
+      // Save the JWT token if returned
+      if (data.token) {
+        console.log("JWT Token:", data.token);
+      }
 
       Alert.alert("Success", "Account created successfully!");
       navigation.navigate("Login");
     } catch (err) {
-      Alert.alert("Error", "Cannot connect to backend");
       console.log(err);
+      Alert.alert("Error", "Cannot connect to backend");
     }
   };
 
