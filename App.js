@@ -8,13 +8,15 @@ import PredictionScreen from "./src/screens/PredictionScreen";
 // 🔥 Your backend URL (local or deployed)
 export const API_URL = "https://football-predictor-im87.onrender.com";  
 
-
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator
+        initialRouteName="Fixtures" // ← Open app with fixtures first
+        screenOptions={{ headerShown: false }}
+      >
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Fixtures" component={FixturesScreen} />
@@ -23,6 +25,3 @@ export default function App() {
     </NavigationContainer>
   );
 }
-
-
-
