@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { API_URL } from "../../App";
 
 export default function FixturesScreen({ navigation }) {
@@ -22,24 +22,20 @@ export default function FixturesScreen({ navigation }) {
     fetchFixtures();
   }, []);
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.fixture}
-      onPress={() => navigation.navigate("Prediction", { fixture: item.teams })}
-    >
-      <View style={styles.teamContainer}>
-        <Image source={{ uri: item.teams.home.logo }} style={styles.logo} />
-        <Text style={styles.teamName}>{item.teams.home.name}</Text>
-      </View>
-      <Text style={styles.vs}>vs</Text>
-      <View style={styles.teamContainer}>
-        <Image source={{ uri: item.teams.away.logo }} style={styles.logo} />
-        <Text style={styles.teamName}>{item.teams.away.name}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderItem = ({ item }) => {
+    const matchDate = new Date(item.fixture.date).toLocaleString();
+    return (
+      <TouchableOpacity
+        style={styles.matchBox}
+        onPress={() => navigation.navigate("Prediction", { fixture: item.teams, date: matchDate })}
+      >
+        <Text style={styles.matchText}>{item.teams.home.name} vs {item.teams.away.name}</Text>
+        <Text style={styles.dateText}>{matchDate}</Text>
+      </TouchableOpacity>
+    );
+  };
 
-  if (loading) return <ActivityIndicator size="large" style={{ flex: 1 }} />;
+  if (loading) return <ActivityIndicator size="large" style={{ flex: 1 }} color="#888" />;
 
   return (
     <View style={styles.container}>
@@ -54,18 +50,15 @@ export default function FixturesScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  fixture: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 8,
-    padding: 12,
-    backgroundColor: "#f2f2f2",
+  container: { flex: 1, padding: 16, backgroundColor: "#e0e0e0" },
+  matchBox: {
+    backgroundColor: "#f0f0f0",
+    padding: 16,
+    marginVertical: 6,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#999",
   },
-  teamContainer: { alignItems: "center" },
-  logo: { width: 50, height: 50, marginBottom: 4 },
-  teamName: { fontWeight: "bold" },
-  vs: { fontSize: 18, fontWeight: "bold" },
+  matchText: { fontWeight: "bold", fontSize: 16, color: "#333" },
+  dateText: { marginTop: 4, fontSize: 14, color: "#555" },
 });
