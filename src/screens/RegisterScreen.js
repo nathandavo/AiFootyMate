@@ -26,7 +26,6 @@ export default function RegisterScreen({ navigation }) {
         return Alert.alert("Registration Error", data.error || "Something went wrong");
       }
 
-      // Save the JWT token if returned
       if (data.token) {
         console.log("JWT Token:", data.token);
       }
@@ -41,6 +40,15 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+
+      {/* Back to Fixtures button */}
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate("Fixtures")}
+      >
+        <Text style={styles.backButtonText}>Back to Fixtures</Text>
+      </TouchableOpacity>
+
       <Text style={styles.title}>Create Account</Text>
 
       <TextInput
@@ -72,6 +80,21 @@ export default function RegisterScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: 24 },
+
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 20,
+    backgroundColor: "#555",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  backButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+
   title: { fontSize: 32, fontWeight: "bold", textAlign: "center", marginBottom: 28 },
   input: {
     borderWidth: 1,
