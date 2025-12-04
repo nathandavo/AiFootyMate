@@ -1,17 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { API_URL } from "../../App";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // added
 
 export default function PredictionScreen({ route }) {
   const { fixture, date } = route.params; // fixture object passed from FixturesScreen
   const [prediction, setPrediction] = useState("");
   const [loading, setLoading] = useState(false);
+  const [token, setToken] = useState(null);
+
+  // Get saved JWT token
+  useEffect(() => {
+    const getToken = async () => {
+      const savedToken = await AsyncStorage.getItem("token");
+      setToken(savedToken);
+    };
+    getToken();
+  }, []);
 
   const handlePredict = async () => {
+    if (!token) {
+      Alert.alert("Login Required", "You must be logged in to get a prediction.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const token = "YOUR_USER_JWT_TOKEN"; // replace with stored token from login
-
       const response = await fetch(`${API_URL}/predict/free`, {
         method: "POST",
         headers: {
@@ -29,6 +43,7 @@ export default function PredictionScreen({ route }) {
 
       if (response.ok) {
         setPrediction(data.prediction);
+        Alert.alert("Prediction Ready", data.prediction); // show prediction in alert
       } else {
         Alert.alert("Error", data.error || "Prediction failed");
       }
