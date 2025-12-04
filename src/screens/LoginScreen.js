@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // to save token
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -24,6 +25,11 @@ export default function LoginScreen({ navigation }) {
 
       const token = data.token;
       console.log("JWT Token:", token);
+
+      // Save JWT token to AsyncStorage
+      if (token) {
+        await AsyncStorage.setItem("token", token);
+      }
 
       Alert.alert("Success", "Logged in successfully!");
       navigation.navigate("Fixtures", { token });
