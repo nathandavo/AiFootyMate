@@ -1,31 +1,25 @@
 import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { API_URL } from "../../App";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // added
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function PredictionScreen({ route }) {
   const { fixture, date } = route.params; // fixture object passed from FixturesScreen
   const [prediction, setPrediction] = useState("");
   const [loading, setLoading] = useState(false);
-  const [token, setToken] = useState(null);
-
-  // Get saved JWT token
-  useEffect(() => {
-    const getToken = async () => {
-      const savedToken = await AsyncStorage.getItem("token");
-      setToken(savedToken);
-    };
-    getToken();
-  }, []);
 
   const handlePredict = async () => {
-    if (!token) {
-      Alert.alert("Login Required", "You must be logged in to get a prediction.");
-      return;
-    }
-
     setLoading(true);
     try {
+      // Get token fresh from AsyncStorage
+      const token = await AsyncStorage.getItem("token");
+
+      if (!token) {
+        Alert.alert("Login Required", "You must be logged in to get a prediction.");
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(`${API_URL}/predict/free`, {
         method: "POST",
         headers: {
@@ -43,7 +37,7 @@ export default function PredictionScreen({ route }) {
 
       if (response.ok) {
         setPrediction(data.prediction);
-        Alert.alert("Prediction Ready", data.prediction); // show prediction in alert
+        Alert.alert("Prediction Ready", data.prediction);
       } else {
         Alert.alert("Error", data.error || "Prediction failed");
       }
@@ -62,7 +56,7 @@ export default function PredictionScreen({ route }) {
         <Text style={styles.dateText}>{date}</Text>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handlePredict}>
+      <TouchableOpacity style={styles.button} onPress={handlePredict} disabled={loading}>
         <Text style={styles.buttonText}>Get Prediction</Text>
       </TouchableOpacity>
 
