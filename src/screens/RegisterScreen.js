@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // added to save token
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function RegisterScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -28,12 +28,11 @@ export default function RegisterScreen({ navigation }) {
       }
 
       if (data.token) {
-        console.log("JWT Token:", data.token);
-        await AsyncStorage.setItem("token", data.token); // save token
+        await AsyncStorage.setItem("userToken", data.token); // save token
+        Alert.alert("Success", "Account created successfully!");
       }
 
-      Alert.alert("Success", "Account created successfully!");
-      navigation.navigate("Login");
+      navigation.navigate("Fixtures"); // go to Fixtures after registration
     } catch (err) {
       console.log(err);
       Alert.alert("Error", "Cannot connect to backend");
@@ -42,8 +41,6 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-
-      {/* Back to Fixtures button */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.navigate("Fixtures")}
@@ -82,34 +79,10 @@ export default function RegisterScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: 24 },
-
-  backButton: {
-    position: "absolute",
-    top: 40,
-    left: 20,
-    backgroundColor: "#555",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  backButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-
+  backButton: { position: "absolute", top: 40, left: 20, backgroundColor: "#555", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
+  backButtonText: { color: "#fff", fontWeight: "600" },
   title: { fontSize: 32, fontWeight: "bold", textAlign: "center", marginBottom: 28 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 12,
-  },
-  button: {
-    backgroundColor: "black",
-    padding: 14,
-    borderRadius: 6,
-    marginTop: 10,
-  },
+  input: { borderWidth: 1, borderColor: "#ccc", padding: 12, borderRadius: 6, marginBottom: 12 },
+  button: { backgroundColor: "black", padding: 14, borderRadius: 6, marginTop: 10 },
   buttonText: { color: "white", textAlign: "center", fontWeight: "600" },
 });
