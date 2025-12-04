@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // added to save token
 
 export default function RegisterScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -28,6 +29,7 @@ export default function RegisterScreen({ navigation }) {
 
       if (data.token) {
         console.log("JWT Token:", data.token);
+        await AsyncStorage.setItem("token", data.token); // save token
       }
 
       Alert.alert("Success", "Account created successfully!");
