@@ -7,6 +7,7 @@ export default function FixturesScreen({ navigation }) {
   const [fixtures, setFixtures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(null);
+  const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
     const fetchFixtures = async () => {
@@ -21,13 +22,15 @@ export default function FixturesScreen({ navigation }) {
       }
     };
 
-    const getToken = async () => {
+    const getUser = async () => {
       const savedToken = await AsyncStorage.getItem("userToken");
+      const savedPremium = await AsyncStorage.getItem("isPremium");
       setToken(savedToken);
+      setIsPremium(savedPremium === "true");
     };
 
     fetchFixtures();
-    getToken();
+    getUser();
   }, []);
 
   const handlePredict = (fixture) => {
@@ -63,7 +66,12 @@ export default function FixturesScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Login/Register button at top right */}
+      {/* Account / Status button at top right */}
+      {token && (
+        <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate("Register")}>
+          <Text style={styles.loginButtonText}>{isPremium ? "Premium" : "Free Version"}</Text>
+        </TouchableOpacity>
+      )}
       {!token && (
         <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate("Login")}>
           <Text style={styles.loginButtonText}>Login/Register</Text>
