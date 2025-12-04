@@ -22,15 +22,26 @@ export default function FixturesScreen({ navigation }) {
       }
     };
 
-    const getUser = async () => {
+    const getToken = async () => {
       const savedToken = await AsyncStorage.getItem("userToken");
-      const savedPremium = await AsyncStorage.getItem("isPremium");
       setToken(savedToken);
-      setIsPremium(savedPremium === "true");
+
+      // Optionally, fetch user info to check premium status
+      if (savedToken) {
+        try {
+          const res = await fetch(`${API_URL}/auth/me`, {
+            headers: { Authorization: `Bearer ${savedToken}` },
+          });
+          const userData = await res.json();
+          setIsPremium(userData.isPremium);
+        } catch (err) {
+          console.log(err);
+        }
+      }
     };
 
     fetchFixtures();
-    getUser();
+    getToken();
   }, []);
 
   const handlePredict = (fixture) => {
@@ -46,14 +57,20 @@ export default function FixturesScreen({ navigation }) {
       return;
     }
 
-    navigation.navigate("Prediction", { fixture: fixture.teams, date: new Date(fixture.fixture.date).toLocaleString(), token });
+    navigation.navigate("Prediction", {
+      fixture: fixture.teams,
+      date: new Date(fixture.fixture.date).toLocaleString(),
+      token,
+    });
   };
 
   const renderItem = ({ item }) => {
     const matchDate = new Date(item.fixture.date).toLocaleString();
     return (
       <View style={styles.matchBox}>
-        <Text style={styles.matchText}>{item.teams.home.name} vs {item.teams.away.name}</Text>
+        <Text style={styles.matchText}>
+          {item.teams.home.name} vs {item.teams.away.name}
+        </Text>
         <Text style={styles.dateText}>{matchDate}</Text>
         <TouchableOpacity style={styles.button} onPress={() => handlePredict(item)}>
           <Text style={styles.buttonText}>Get Prediction</Text>
@@ -66,17 +83,21 @@ export default function FixturesScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Account / Status button at top right */}
-      {token && (
-        <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate("Register")}>
-          <Text style={styles.loginButtonText}>{isPremium ? "Premium" : "Free Version"}</Text>
-        </TouchableOpacity>
-      )}
-      {!token && (
-        <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate("Login")}>
-          <Text style={styles.loginButtonText}>Login/Register</Text>
-        </TouchableOpacity>
-      )}
+      {/* Top-right account/status button */}
+      <TouchableOpacity
+        style={styles.loginButton}
+        onPress={() => {
+          if (token) {
+            Alert.alert("Account Info", isPremium ? "Premium Version" : "Free Version");
+          } else {
+            navigation.navigate("Login");
+          }
+        }}
+      >
+        <Text style={styles.loginButtonText}>
+          {token ? (isPremium ? "Premium" : "Free Version") : "Login/Register"}
+        </Text>
+      </TouchableOpacity>
 
       <FlatList
         data={fixtures}
