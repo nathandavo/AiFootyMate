@@ -53,6 +53,15 @@ export default function AccountScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
+      
+      {/* 🔙 Back Button */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => navigation.navigate("Fixtures")}
+      >
+        <Text style={styles.backText}>← Back</Text>
+      </TouchableOpacity>
+
       <Text style={styles.header}>My Account</Text>
 
       {email ? (
@@ -84,6 +93,21 @@ export default function AccountScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#e0e0e0", padding: 20 },
+
+  /* 🔙 Back button style */
+  backButton: {
+    position: "absolute",
+    top: 20,
+    left: 20,
+    padding: 8,
+    zIndex: 10,
+  },
+  backText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#000",
+  },
+
   header: { fontSize: 28, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
   emailText: { fontSize: 17, textAlign: "center", marginBottom: 10, color: "#333" },
   box: {
