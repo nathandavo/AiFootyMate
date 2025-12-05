@@ -9,10 +9,14 @@ export default function PremiumScreen({ navigation }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (data.url) {
-        // Open Stripe Checkout in browser
+      if (data?.url) {
         const supported = await Linking.canOpenURL(data.url);
         if (supported) {
           await Linking.openURL(data.url);
@@ -23,7 +27,7 @@ export default function PremiumScreen({ navigation }) {
         Alert.alert("Error", "Failed to create payment session");
       }
     } catch (err) {
-      console.log(err);
+      console.log("Payment error:", err);
       Alert.alert("Error", "Something went wrong with payment");
     }
   };
