@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Linking } from "react-native";
 import { API_URL } from "../../App";
 
 export default function PremiumScreen({ navigation }) {
@@ -12,8 +12,13 @@ export default function PremiumScreen({ navigation }) {
       const data = await response.json();
 
       if (data.url) {
-        // Open Stripe Checkout
-        window.open(data.url, "_blank");
+        // Open Stripe Checkout in browser
+        const supported = await Linking.canOpenURL(data.url);
+        if (supported) {
+          await Linking.openURL(data.url);
+        } else {
+          Alert.alert("Error", "Cannot open payment link");
+        }
       } else {
         Alert.alert("Error", "Failed to create payment session");
       }
