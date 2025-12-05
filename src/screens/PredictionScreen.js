@@ -4,15 +4,15 @@ import { API_URL } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function PredictionScreen({ route }) {
-  const { fixture, date } = route.params; // fixture object passed from FixturesScreen
+  const { fixture, date, token: passedToken } = route.params; // token from FixturesScreen
   const [prediction, setPrediction] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handlePredict = async () => {
     setLoading(true);
     try {
-      // Get token fresh from AsyncStorage
-      const token = await AsyncStorage.getItem("token");
+      // Use token from params or fallback to AsyncStorage
+      const token = passedToken || (await AsyncStorage.getItem("userToken"));
 
       if (!token) {
         Alert.alert("Login Required", "You must be logged in to get a prediction.");
@@ -27,9 +27,9 @@ export default function PredictionScreen({ route }) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          fixtureId: fixture.home.id + "-" + fixture.away.id,
-          homeTeam: fixture.home.name,
-          awayTeam: fixture.away.name,
+          fixtureId: fixture.id, // optional
+          homeTeam: fixture.home.id, // send ID
+          awayTeam: fixture.away.id, // send ID
         }),
       });
 
@@ -37,7 +37,6 @@ export default function PredictionScreen({ route }) {
 
       if (response.ok) {
         setPrediction(data.prediction);
-        Alert.alert("Prediction Ready", data.prediction);
       } else {
         Alert.alert("Error", data.error || "Prediction failed");
       }
