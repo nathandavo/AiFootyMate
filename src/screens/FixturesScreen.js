@@ -16,13 +16,13 @@ export default function FixturesScreen({ navigation }) {
         const data = await response.json();
         setFixtures(data);
       } catch (err) {
-        console.log(err);
+        console.log("Error fetching fixtures:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    const getToken = async () => {
+    const getTokenAndUser = async () => {
       const savedToken = await AsyncStorage.getItem("userToken");
       setToken(savedToken);
 
@@ -34,13 +34,13 @@ export default function FixturesScreen({ navigation }) {
           const userData = await res.json();
           setIsPremium(userData.isPremium);
         } catch (err) {
-          console.log(err);
+          console.log("Error fetching user info:", err);
         }
       }
     };
 
     fetchFixtures();
-    getToken();
+    getTokenAndUser();
   }, []);
 
   const handlePredict = (fixture) => {
@@ -56,8 +56,13 @@ export default function FixturesScreen({ navigation }) {
       return;
     }
 
+    // Send correct team IDs and fixture ID to Prediction screen
     navigation.navigate("Prediction", {
-      fixture: fixture.teams,
+      fixture: {
+        home: { id: fixture.teams.home.id, name: fixture.teams.home.name },
+        away: { id: fixture.teams.away.id, name: fixture.teams.away.name },
+        id: fixture.fixture.id,
+      },
       date: new Date(fixture.fixture.date).toLocaleString(),
       token,
     });
@@ -67,7 +72,9 @@ export default function FixturesScreen({ navigation }) {
     const matchDate = new Date(item.fixture.date).toLocaleString();
     return (
       <View style={styles.matchBox}>
-        <Text style={styles.matchText}>{item.teams.home.name} vs {item.teams.away.name}</Text>
+        <Text style={styles.matchText}>
+          {item.teams.home.name} vs {item.teams.away.name}
+        </Text>
         <Text style={styles.dateText}>{matchDate}</Text>
         <TouchableOpacity style={styles.button} onPress={() => handlePredict(item)}>
           <Text style={styles.buttonText}>Get Prediction</Text>
@@ -90,7 +97,9 @@ export default function FixturesScreen({ navigation }) {
           }
         }}
       >
-        <Text style={styles.loginButtonText}>{token ? (isPremium ? "Premium" : "Free Version") : "Login/Register"}</Text>
+        <Text style={styles.loginButtonText}>
+          {token ? (isPremium ? "Premium" : "Free Version") : "Login/Register"}
+        </Text>
       </TouchableOpacity>
 
       <FlatList
