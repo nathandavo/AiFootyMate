@@ -1,14 +1,32 @@
-import { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView } from "react-native";
 import { API_URL } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function PredictionScreen({ route, navigation }) {
-  const { fixture, date, token: passedToken, isPremium: passedIsPremium } = route.params;
+  const { fixture, date, token: passedToken } = route.params;
   const [prediction, setPrediction] = useState("");
   const [loading, setLoading] = useState(false);
   const [winChances, setWinChances] = useState({ home: 0, away: 0, draw: 0 });
-  const [recentForm, setRecentForm] = useState({ home: [], away: [] });
+  const [isPremium, setIsPremium] = useState(false);
+
+  useEffect(() => {
+    const getUserPremiumStatus = async () => {
+      const token = passedToken || (await AsyncStorage.getItem("userToken"));
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const userData = await res.json();
+        setIsPremium(userData.isPremium);
+      } catch (err) {
+        console.log("Error fetching user info:", err);
+      }
+    };
+
+    getUserPremiumStatus();
+  }, []);
 
   const handlePredict = async () => {
     setLoading(true);
@@ -34,25 +52,35 @@ export default function PredictionScreen({ route, navigation }) {
       });
 
       const data = await response.json();
+
       if (response.ok) {
         setPrediction(data.prediction);
 
-        if (data.stats) {
-          const homeForm = data.stats.homeStats.recentForm.slice(-5);
-          const awayForm = data.stats.awayStats.recentForm.slice(-5);
-          setRecentForm({ home: homeForm, away: awayForm });
+        // Calculate realistic win probabilities
+        const homeForm = (data.stats.homeStats.recentForm || []).slice(-5);
+        const awayForm = (data.stats.awayStats.recentForm || []).slice(-5);
 
-          const homeWins = homeForm.filter(f => f === "W").length;
-          const awayWins = awayForm.filter(f => f === "W").length;
-          const draws = homeForm.filter(f => f === "D").length + awayForm.filter(f => f === "D").length;
-          const total = homeWins + awayWins + draws || 1;
+        const calcWinProb = (homeForm, awayForm) => {
+          const homeW = homeForm.filter(f => f === "W").length;
+          const homeD = homeForm.filter(f => f === "D").length;
 
-          setWinChances({
-            home: Math.round((homeWins / total) * 100),
-            away: Math.round((awayWins / total) * 100),
-            draw: Math.round((draws / total) * 100),
-          });
-        }
+          const awayW = awayForm.filter(f => f === "W").length;
+          const awayD = awayForm.filter(f => f === "D").length;
+
+          const homeScore = homeW + 0.5 * homeD;
+          const awayScore = awayW + 0.5 * awayD;
+
+          const totalScore = homeScore + awayScore || 1;
+
+          const homePct = Math.round((homeScore / totalScore) * 100);
+          const awayPct = Math.round((awayScore / totalScore) * 100);
+          const drawPct = 100 - homePct - awayPct;
+
+          return { home: homePct, away: awayPct, draw: drawPct };
+        };
+
+        setWinChances(calcWinProb(homeForm, awayForm));
+
       } else {
         Alert.alert("Error", data.error || "Prediction failed");
       }
@@ -64,24 +92,20 @@ export default function PredictionScreen({ route, navigation }) {
     }
   };
 
-  const renderFormDots = (form) =>
-    form.map((f, i) => {
-      let color = "#ccc";
-      if (f === "W") color = "#4CAF50"; // green
-      else if (f === "D") color = "#FFC107"; // yellow
-      else if (f === "L") color = "#F44336"; // red
-      return <View key={i} style={[styles.dot, { backgroundColor: color }]} />;
-    });
-
   return (
-    <View style={styles.container}>
-      {/* Top Bar with Back Button & Version Info */}
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.versionText}>{passedIsPremium ? "Premium Version" : "Free Version"}</Text>
-      </View>
+    <ScrollView style={styles.scrollContainer} contentContainerStyle={{ alignItems: "center", paddingBottom: 40 }}>
+      {/* Back button */}
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={styles.backButtonText}>← Fixtures</Text>
+      </TouchableOpacity>
+
+      {/* Premium status */}
+      <Text style={styles.premiumText}>
+        {isPremium ? "Premium Version" : "Free Version"}
+      </Text>
 
       <View style={styles.matchBox}>
         <Text style={styles.matchText}>{fixture.home.name} vs {fixture.away.name}</Text>
@@ -95,47 +119,43 @@ export default function PredictionScreen({ route, navigation }) {
       {loading && <ActivityIndicator size="large" style={{ marginTop: 16 }} color="#888" />}
 
       {prediction ? (
-        <View style={styles.predictionCard}>
-          <Text style={styles.sectionTitle}>Score Prediction</Text>
-          <Text style={styles.predictionText}>{prediction}</Text>
+        <View style={styles.predictionBox}>
+          <Text style={styles.prediction}>{prediction}</Text>
 
-          <Text style={styles.sectionTitle}>Win Probability</Text>
-          <View style={styles.probRow}>
+          <View style={styles.probBox}>
+            <Text style={styles.probText}>Win Probability:</Text>
             <Text style={styles.probText}>{fixture.home.name}: {winChances.home}%</Text>
-            <Text style={styles.probText}>{fixture.away.name}: {winChances.away}%</Text>
             <Text style={styles.probText}>Draw: {winChances.draw}%</Text>
-          </View>
-
-          <Text style={styles.sectionTitle}>Recent Form (Last 5 Matches)</Text>
-          <View style={styles.formRow}>
-            <Text style={styles.formLabel}>{fixture.home.name}:</Text>
-            <View style={styles.dotsRow}>{renderFormDots(recentForm.home)}</View>
-          </View>
-          <View style={styles.formRow}>
-            <Text style={styles.formLabel}>{fixture.away.name}:</Text>
-            <View style={styles.dotsRow}>{renderFormDots(recentForm.away)}</View>
+            <Text style={styles.probText}>{fixture.away.name}: {winChances.away}%</Text>
           </View>
         </View>
       ) : null}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#e0e0e0", alignItems: "center" },
-  topBar: { width: "100%", flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  backButton: { backgroundColor: "#555", paddingVertical: 4, paddingHorizontal: 10, borderRadius: 6 },
+  scrollContainer: { flex: 1, backgroundColor: "#e0e0e0" },
+  backButton: {
+    position: "absolute",
+    top: 16,
+    left: 16,
+    backgroundColor: "#555",
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 4,
+    zIndex: 10,
+  },
   backButtonText: { color: "white", fontSize: 12, fontWeight: "bold" },
-  versionText: { fontSize: 12, fontWeight: "bold", color: "#333" },
-
+  premiumText: { marginTop: 16, fontSize: 12, color: "#555", fontWeight: "bold" },
   matchBox: {
-    width: "100%",
+    width: "90%",
     backgroundColor: "#f0f0f0",
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#999",
-    marginBottom: 16,
+    marginVertical: 24,
     alignItems: "center",
   },
   matchText: { fontWeight: "bold", fontSize: 18, color: "#333" },
@@ -144,24 +164,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#333",
     padding: 14,
     borderRadius: 8,
-    width: "100%",
     marginBottom: 16,
+    width: "90%",
   },
   buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
-  predictionCard: {
-    width: "100%",
-    backgroundColor: "#f0f0f0",
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#999",
-  },
-  sectionTitle: { fontWeight: "bold", fontSize: 16, marginTop: 12, marginBottom: 6, color: "#222" },
-  predictionText: { fontSize: 16, marginBottom: 8, color: "#333" },
-  probRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
-  probText: { fontSize: 14, color: "#555" },
-  formRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  formLabel: { width: 80, fontSize: 14, color: "#555" },
-  dotsRow: { flexDirection: "row" },
-  dot: { width: 14, height: 14, borderRadius: 7, marginHorizontal: 2 },
+  predictionBox: { width: "90%", marginTop: 20 },
+  prediction: { fontSize: 16, color: "#222", marginBottom: 16, lineHeight: 22 },
+  probBox: { backgroundColor: "#f9f9f9", padding: 12, borderRadius: 6, borderWidth: 1, borderColor: "#ccc" },
+  probText: { fontSize: 14, color: "#333", marginVertical: 2 },
 });
