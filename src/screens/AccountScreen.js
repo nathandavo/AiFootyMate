@@ -54,12 +54,12 @@ export default function AccountScreen({ navigation, route }) {
   return (
     <View style={styles.container}>
       
-      {/* 🔙 Back Button */}
+      {/* Back Button - ONLY CHANGE MADE */}
       <TouchableOpacity 
         style={styles.backButton}
-        onPress={() => navigation.navigate("Fixtures")}
+        onPress={() => navigation.navigate("Fixtures")}  // This one is actually SAFE here
       >
-        <Text style={styles.backText}>← Back</Text>
+        <Text style={styles.backText}>Back</Text>
       </TouchableOpacity>
 
       <Text style={styles.header}>My Account</Text>
@@ -71,7 +71,7 @@ export default function AccountScreen({ navigation, route }) {
       <View style={styles.box}>
         <Text style={styles.label}>Account Type:</Text>
         <Text style={styles.value}>
-          {isPremium ? "⭐ Premium" : "Free Version"}
+          {isPremium ? "Premium" : "Free Version"}
         </Text>
       </View>
 
@@ -94,7 +94,6 @@ export default function AccountScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#e0e0e0", padding: 20 },
 
-  /* 🔙 Back button style */
   backButton: {
     position: "absolute",
     top: 20,
