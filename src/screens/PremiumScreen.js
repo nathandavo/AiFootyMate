@@ -2,20 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Linking } from "react-native";
 import { API_URL } from "../../App";
 
-export default function PremiumScreen({ route }) {
-
-  const isPremium = route?.params?.isPremium ?? false;
-
-  // ⛔️ ADDED — prevents the white screen if user is not premium
-  if (!isPremium) {
-    return (
-      <View style={{ flex:1, justifyContent:"center", alignItems:"center", padding:24, backgroundColor:"#e0e0e0" }}>
-        <Text style={{ fontSize:18, textAlign:"center" }}>
-          You need to be a premium user to access this page.
-        </Text>
-      </View>
-    );
-  }
+export default function PremiumScreen() {
 
   const openStripeCheckout = async (url) => {
     const supported = await Linking.canOpenURL(url);
@@ -32,6 +19,7 @@ export default function PremiumScreen({ route }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
+
       const data = await response.json();
 
       if (data.url) {
@@ -49,7 +37,8 @@ export default function PremiumScreen({ route }) {
     <View style={styles.container}>
       <Text style={styles.header}>Upgrade to Premium</Text>
       <Text style={styles.info}>
-        Unlock premium features like advanced predictions, win probabilities, and AI insights for all matches.
+        Unlock premium features like advanced predictions, win probabilities,
+        and AI insights for all matches.
       </Text>
 
       <TouchableOpacity style={styles.button} onPress={handlePayment}>
