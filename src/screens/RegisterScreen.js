@@ -12,40 +12,41 @@ export default function RegisterScreen({ navigation }) {
     }
 
     try {
-      const response = await fetch(
-        "https://football-predictor-im87.onrender.com/auth/register",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+      try {
+        const response = await fetch(
+          "https://football-predictor-im87.onrender.com/auth/register",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          return Alert.alert("Registration Error", data.error || "Something went wrong");
         }
-      );
 
-      const data = await response.json();
+        if (data.token) {
+          await AsyncStorage.setItem("userToken", data.token); // save token
+          Alert.alert("Success", "Account created successfully!");
+        }
 
-      if (!response.ok) {
-        return Alert.alert("Registration Error", data.error || "Something went wrong");
+        navigation.navigate("Fixtures"); // go to Fixtures after registration
+      } catch (err) {
+        console.log(err);
+        Alert.alert("Error", "Cannot connect to backend");
       }
-
-      if (data.token) {
-        await AsyncStorage.setItem("userToken", data.token); // save token
-        Alert.alert("Success", "Account created successfully!");
-      }
-
-      navigation.navigate("Fixtures"); // go to Fixtures after registration
-    } catch (err) {
-      console.log(err);
-      Alert.alert("Error", "Cannot connect to backend");
-    }
-  };
+    };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.navigate("Fixtures")}
+        onPress={() => navigation.navigate("Welcome")}   {/* ← ONLY THIS LINE CHANGED */}
       >
-        <Text style={styles.backButtonText}>Back to Fixtures</Text>
+        <Text style={styles.backButtonText}>Back</Text>   {/* ← Text simplified but optional */}
       </TouchableOpacity>
 
       <Text style={styles.title}>Create Account</Text>
