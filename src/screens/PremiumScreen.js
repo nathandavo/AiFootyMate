@@ -3,14 +3,11 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, Linking, ActivityIndic
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "../../App";
 
-export default function PremiumScreen() {
+export default function PremiumScreen({ navigation }) {
   const [isPremium, setIsPremium] = useState(null); // null = loading
 
-  // ----------------------
-  // Check user's premium status
-  // ----------------------
   useEffect(() => {
-    const checkPremium = async () => {
+    const fetchUser = async () => {
       const token = await AsyncStorage.getItem("userToken");
       if (!token) {
         setIsPremium(false);
@@ -22,51 +19,33 @@ export default function PremiumScreen() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-
         const premiumStatus =
           data?.isPremium ??
           data?.user?.isPremium ??
           data?.data?.isPremium ??
           false;
-
         setIsPremium(premiumStatus);
       } catch (err) {
-        console.log("Error checking premium:", err);
+        console.log("Error fetching user info:", err);
         setIsPremium(false);
       }
     };
 
-    checkPremium();
+    fetchUser();
   }, []);
 
-  // ----------------------
-  // Loading state
-  // ----------------------
   if (isPremium === null) {
+    return <ActivityIndicator size="large" style={{ flex: 1 }} color="#888" />;
+  }
+
+  if (isPremium) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#333" />
-        <Text style={{ marginTop: 10 }}>Checking premium status...</Text>
+        <Text style={styles.header}>You are already a Premium user ⭐</Text>
       </View>
     );
   }
 
-  // ----------------------
-  // Non-premium view
-  // ----------------------
-  if (!isPremium) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.info}>
-          You need to be a premium user to access this page.
-        </Text>
-      </View>
-    );
-  }
-
-  // ----------------------
-  // Premium payment logic
-  // ----------------------
   const openStripeCheckout = async (url) => {
     const supported = await Linking.canOpenURL(url);
     if (supported) {
@@ -82,7 +61,6 @@ export default function PremiumScreen() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
-
       const data = await response.json();
 
       if (data.url) {
