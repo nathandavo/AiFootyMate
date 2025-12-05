@@ -33,9 +33,14 @@ export default function FixturesScreen({ navigation }) {
           });
           const userData = await res.json();
 
-          // Fix: accurately read isPremium flag
-          // Depending on your backend, it may be under userData.user.isPremium
-          setIsPremium(userData?.user?.isPremium ?? false);
+          // FIX: detect premium correctly regardless of backend format
+          const premiumStatus =
+            userData?.isPremium ??
+            userData?.user?.isPremium ??
+            userData?.data?.isPremium ??
+            false;
+
+          setIsPremium(premiumStatus);
         } catch (err) {
           console.log("Error fetching user info:", err);
         }
@@ -89,19 +94,13 @@ export default function FixturesScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      
+      {/* FIXED BUTTON — shows correct version AND goes to AccountScreen */}
       <TouchableOpacity
         style={styles.loginButton}
         onPress={() => {
           if (token) {
-            // Navigate to account or just show version info
-            Alert.alert(
-              "Account Info",
-              isPremium ? "Premium Version" : "Free Version",
-              [
-                { text: "OK" },
-                { text: "Go to Account", onPress: () => navigation.navigate("Account") },
-              ]
-            );
+            navigation.navigate("Account", { isPremium });
           } else {
             navigation.navigate("Login");
           }
