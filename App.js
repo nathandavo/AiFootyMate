@@ -7,7 +7,6 @@ import RegisterScreen from "./src/screens/RegisterScreen";
 import FixturesScreen from "./src/screens/FixturesScreen";
 import PredictionScreen from "./src/screens/PredictionScreen";
 import AccountScreen from "./src/screens/AccountScreen"; // <--- ADDED
-import PremiumScreen from "./src/screens/PremiumScreen"; // <--- ADDED
 
 export const API_URL = "https://football-predictor-im87.onrender.com";
 
