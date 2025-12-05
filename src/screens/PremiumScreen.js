@@ -2,7 +2,20 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Linking } from "react-native";
 import { API_URL } from "../../App";
 
-export default function PremiumScreen() {
+export default function PremiumScreen({ route }) {
+
+  const isPremium = route?.params?.isPremium ?? false;
+
+  // ⛔️ ADDED — prevents the white screen if user is not premium
+  if (!isPremium) {
+    return (
+      <View style={{ flex:1, justifyContent:"center", alignItems:"center", padding:24, backgroundColor:"#e0e0e0" }}>
+        <Text style={{ fontSize:18, textAlign:"center" }}>
+          You need to be a premium user to access this page.
+        </Text>
+      </View>
+    );
+  }
 
   const openStripeCheckout = async (url) => {
     const supported = await Linking.canOpenURL(url);
