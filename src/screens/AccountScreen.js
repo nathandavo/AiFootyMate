@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "../../App";
 
 export default function AccountScreen({ navigation, route }) {
-  const [isPremium, setIsPremium] = useState(route.params?.isPremium ?? false);
+  const [isPremium, setIsPremium] = useState(false);
   const [email, setEmail] = useState("");
 
   useEffect(() => {
