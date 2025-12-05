@@ -41,6 +41,14 @@ export default function PremiumScreen({ navigation }) {
   if (isPremium) {
     return (
       <View style={styles.container}>
+        {/* Back button */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.navigate("Fixtures")}
+        >
+          <Text style={styles.backText}>← Back</Text>
+        </TouchableOpacity>
+
         <Text style={styles.header}>You are already a Premium user ⭐</Text>
       </View>
     );
@@ -76,6 +84,14 @@ export default function PremiumScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* Back button */}
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate("Fixtures")}
+      >
+        <Text style={styles.backText}>← Back</Text>
+      </TouchableOpacity>
+
       <Text style={styles.header}>Upgrade to Premium</Text>
       <Text style={styles.info}>
         Unlock premium feature and get predictions for all matches.
@@ -94,4 +110,17 @@ const styles = StyleSheet.create({
   info: { fontSize: 16, marginBottom: 40, textAlign: "center", color: "#333" },
   button: { backgroundColor: "#333", padding: 16, borderRadius: 8 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold", textAlign: "center" },
+
+  /* Back button style */
+  backButton: {
+    position: "absolute",
+    top: 20,
+    left: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: "#555",
+    borderRadius: 6,
+    zIndex: 10,
+  },
+  backText: { color: "#fff", fontWeight: "bold", fontSize: 14 },
 });
