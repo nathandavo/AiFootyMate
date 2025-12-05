@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function RegisterScreen({ navigation }) {
@@ -12,41 +19,40 @@ export default function RegisterScreen({ navigation }) {
     }
 
     try {
-      try {
-        const response = await fetch(
-          "https://football-predictor-im87.onrender.com/auth/register",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-          }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          return Alert.alert("Registration Error", data.error || "Something went wrong");
+      const response = await fetch(
+        "https://football-predictor-im87.onrender.com/auth/register",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
         }
+      );
 
-        if (data.token) {
-          await AsyncStorage.setItem("userToken", data.token); // save token
-          Alert.alert("Success", "Account created successfully!");
-        }
+      const data = await response.json();
 
-        navigation.navigate("Fixtures"); // go to Fixtures after registration
-      } catch (err) {
-        console.log(err);
-        Alert.alert("Error", "Cannot connect to backend");
+      if (!response.ok) {
+        return Alert.alert("Registration Error", data.error || "Something went wrong");
       }
-    };
+
+      if (data.token) {
+        await AsyncStorage.setItem("userToken", data.token);
+        Alert.alert("Success", "Account created successfully!");
+      }
+
+      navigation.navigate("Fixtures");
+    } catch (err) {
+      console.log(err);
+      Alert.alert("Error", "Cannot connect to backend");
+    }
+  };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.navigate("Welcome")}   {/* ← ONLY THIS LINE CHANGED */}
+        onPress={() => navigation.navigate("Welcome")}   {/* ← Fixed to prevent white-screen loop */}
       >
-        <Text style={styles.backButtonText}>Back</Text>   {/* ← Text simplified but optional */}
+        <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
 
       <Text style={styles.title}>Create Account</Text>
@@ -63,7 +69,7 @@ export default function RegisterScreen({ navigation }) {
         placeholder="Password"
         secureTextEntry
         style={styles.input}
-        value={password}
+        value={password
         onChangeText={setPassword}
       />
 
@@ -80,10 +86,24 @@ export default function RegisterScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: 24 },
-  backButton: { position: "absolute", top: 40, left: 20, backgroundColor: "#555", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 20,
+    backgroundColor: "#555",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
   backButtonText: { color: "#fff", fontWeight: "600" },
   title: { fontSize: 32, fontWeight: "bold", textAlign: "center", marginBottom: 28 },
-  input: { borderWidth: 1, borderColor: "#ccc", padding: 12, borderRadius: 6, marginBottom: 12 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 12,
+  },
   button: { backgroundColor: "black", padding: 14, borderRadius: 6, marginTop: 10 },
   buttonText: { color: "white", textAlign: "center", fontWeight: "600" },
 });
