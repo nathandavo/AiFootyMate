@@ -78,8 +78,7 @@ export default function PremiumScreen({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.header}>Upgrade to Premium</Text>
       <Text style={styles.info}>
-        Unlock premium features like advanced predictions, win probabilities,
-        and AI insights for all matches.
+        Unlock premium feature and get predictions for all matches.
       </Text>
 
       <TouchableOpacity style={styles.button} onPress={handlePayment}>
