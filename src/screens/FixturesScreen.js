@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { API_URL } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -9,39 +9,40 @@ export default function FixturesScreen({ navigation }) {
   const [token, setToken] = useState(null);
   const [isPremium, setIsPremium] = useState(false);
 
-  useEffect(() => {
-    const fetchFixtures = async () => {
+  const fetchFixtures = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/fixtures`);
+      const data = await response.json();
+      setFixtures(data);
+    } catch (err) {
+      console.log("Error fetching fixtures:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getTokenAndUser = useCallback(async () => {
+    const savedToken = await AsyncStorage.getItem("userToken");
+    setToken(savedToken);
+
+    if (savedToken) {
       try {
-        const response = await fetch(`${API_URL}/fixtures`);
-        const data = await response.json();
-        setFixtures(data);
+        const res = await fetch(`${API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${savedToken}` },
+        });
+        const userData = await res.json();
+        // Fix: check if userData.user exists
+        setIsPremium(userData?.user?.isPremium ?? false);
       } catch (err) {
-        console.log("Error fetching fixtures:", err);
-      } finally {
-        setLoading(false);
+        console.log("Error fetching user info:", err);
       }
-    };
+    }
+  }, []);
 
-    const getTokenAndUser = async () => {
-      const savedToken = await AsyncStorage.getItem("userToken");
-      setToken(savedToken);
-
-      if (savedToken) {
-        try {
-          const res = await fetch(`${API_URL}/auth/me`, {
-            headers: { Authorization: `Bearer ${savedToken}` },
-          });
-          const userData = await res.json();
-          setIsPremium(userData.isPremium);
-        } catch (err) {
-          console.log("Error fetching user info:", err);
-        }
-      }
-    };
-
+  useEffect(() => {
     fetchFixtures();
     getTokenAndUser();
-  }, []);
+  }, [fetchFixtures, getTokenAndUser]);
 
   const handlePredict = (fixture) => {
     if (!token) {
@@ -56,7 +57,6 @@ export default function FixturesScreen({ navigation }) {
       return;
     }
 
-    // Send correct team IDs and fixture ID to Prediction screen
     navigation.navigate("Prediction", {
       fixture: {
         home: { id: fixture.teams.home.id, name: fixture.teams.home.name },
