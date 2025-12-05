@@ -1,9 +1,72 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Linking } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Linking, ActivityIndicator } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "../../App";
 
 export default function PremiumScreen() {
+  const [isPremium, setIsPremium] = useState(null); // null = loading
 
+  // ----------------------
+  // Check user's premium status
+  // ----------------------
+  useEffect(() => {
+    const checkPremium = async () => {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        setIsPremium(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+
+        const premiumStatus =
+          data?.isPremium ??
+          data?.user?.isPremium ??
+          data?.data?.isPremium ??
+          false;
+
+        setIsPremium(premiumStatus);
+      } catch (err) {
+        console.log("Error checking premium:", err);
+        setIsPremium(false);
+      }
+    };
+
+    checkPremium();
+  }, []);
+
+  // ----------------------
+  // Loading state
+  // ----------------------
+  if (isPremium === null) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#333" />
+        <Text style={{ marginTop: 10 }}>Checking premium status...</Text>
+      </View>
+    );
+  }
+
+  // ----------------------
+  // Non-premium view
+  // ----------------------
+  if (!isPremium) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.info}>
+          You need to be a premium user to access this page.
+        </Text>
+      </View>
+    );
+  }
+
+  // ----------------------
+  // Premium payment logic
+  // ----------------------
   const openStripeCheckout = async (url) => {
     const supported = await Linking.canOpenURL(url);
     if (supported) {
