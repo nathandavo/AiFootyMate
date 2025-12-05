@@ -9,14 +9,10 @@ export default function PremiumScreen({ navigation }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
       const data = await response.json();
 
-      if (data?.url) {
+      if (data.url) {
+        // Use React Native Linking instead of window.open
         const supported = await Linking.canOpenURL(data.url);
         if (supported) {
           await Linking.openURL(data.url);
@@ -27,7 +23,7 @@ export default function PremiumScreen({ navigation }) {
         Alert.alert("Error", "Failed to create payment session");
       }
     } catch (err) {
-      console.log("Payment error:", err);
+      console.log(err);
       Alert.alert("Error", "Something went wrong with payment");
     }
   };
