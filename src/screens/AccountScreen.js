@@ -1,66 +1,122 @@
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "../../App";
-import { useEffect, useState } from "react";
 
-export default function AccountScreen({ navigation }) {
-  const [isPremium, setIsPremium] = useState(false);
-  const [token, setToken] = useState(null);
+export default function AccountScreen({ navigation, route }) {
+  const [isPremium, setIsPremium] = useState(route.params?.isPremium ?? false);
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const savedToken = await AsyncStorage.getItem("userToken");
-      setToken(savedToken);
-
-      if (!savedToken) return;
+    const loadUser = async () => {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) return;
 
       try {
         const res = await fetch(`${API_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${savedToken}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
+
         const data = await res.json();
-        setIsPremium(data?.user?.isPremium ?? false);
+
+        const premiumStatus =
+          data?.isPremium ??
+          data?.user?.isPremium ??
+          data?.data?.isPremium ??
+          false;
+
+        setIsPremium(premiumStatus);
+
+        const userEmail =
+          data?.email ??
+          data?.user?.email ??
+          data?.data?.email ??
+          "";
+
+        setEmail(userEmail);
       } catch (err) {
-        console.log("Error fetching user:", err);
+        console.log("Error loading user info:", err);
       }
     };
 
-    fetchUser();
+    loadUser();
   }, []);
 
-  const handleLogout = async () => {
+  const logout = async () => {
     await AsyncStorage.removeItem("userToken");
-    Alert.alert("Logged out", "You have been logged out.");
-    navigation.navigate("Login"); // go back to login
-  };
-
-  const handleGetPremium = () => {
-    navigation.navigate("GetPremium"); // Navigate to your purchase screen
+    Alert.alert("Logged Out", "You have been logged out.");
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Fixtures" }],
+    });
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Account</Text>
-      <Text style={styles.version}>Version: {isPremium ? "Premium" : "Free"}</Text>
+      <Text style={styles.header}>My Account</Text>
+
+      {email ? (
+        <Text style={styles.emailText}>{email}</Text>
+      ) : null}
+
+      <View style={styles.box}>
+        <Text style={styles.label}>Account Type:</Text>
+        <Text style={styles.value}>
+          {isPremium ? "⭐ Premium" : "Free Version"}
+        </Text>
+      </View>
 
       {!isPremium && (
-        <TouchableOpacity style={styles.premiumButton} onPress={handleGetPremium}>
-          <Text style={styles.buttonText}>Get Premium</Text>
+        <TouchableOpacity 
+          style={styles.upgradeButton} 
+          onPress={() => navigation.navigate("Premium")}
+        >
+          <Text style={styles.upgradeText}>Upgrade to Premium</Text>
         </TouchableOpacity>
       )}
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.buttonText}>Logout</Text>
+      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+        <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 16 },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
-  version: { fontSize: 18, marginBottom: 20 },
-  premiumButton: { backgroundColor: "#ff9900", padding: 12, borderRadius: 8, marginBottom: 10 },
-  logoutButton: { backgroundColor: "#333", padding: 12, borderRadius: 8 },
-  buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
+  container: { flex: 1, backgroundColor: "#e0e0e0", padding: 20 },
+  header: { fontSize: 28, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
+  emailText: { fontSize: 17, textAlign: "center", marginBottom: 10, color: "#333" },
+  box: {
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    marginBottom: 20,
+  },
+  label: { fontSize: 16, fontWeight: "bold", color: "#555" },
+  value: { marginTop: 6, fontSize: 18, fontWeight: "bold", color: "#222" },
+  upgradeButton: {
+    backgroundColor: "#333",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 30,
+  },
+  upgradeText: {
+    color: "#fff",
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  logoutButton: {
+    backgroundColor: "#b30000",
+    padding: 12,
+    borderRadius: 8,
+  },
+  logoutText: {
+    color: "#fff",
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
