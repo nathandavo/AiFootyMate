@@ -50,7 +50,7 @@ export default function RegisterScreen({ navigation }) {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.navigate("Welcome")}   {/* ← Fixed to prevent white-screen loop */}
+        onPress={() => navigation.navigate("Welcome")}
       >
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
@@ -69,7 +69,7 @@ export default function RegisterScreen({ navigation }) {
         placeholder="Password"
         secureTextEntry
         style={styles.input}
-        value={password
+        value={password}
         onChangeText={setPassword}
       />
 
@@ -78,7 +78,9 @@ export default function RegisterScreen({ navigation }) {
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-        <Text style={{ marginTop: 18, textAlign: "center" }}>Back to Login</Text>
+        <Text style={{ marginTop: 18, textAlign: "center" }}>
+          Back to Login
+        </Text>
       </TouchableOpacity>
     </View>
   );
