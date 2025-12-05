@@ -15,33 +15,36 @@ const Stack = createNativeStackNavigator();
 
 function WelcomeScreen({ navigation }) {
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Welcome to MyFootyAiMate!</Text>
-      <Text style={styles.bullet}>• Select Upcoming Matches</Text>
-      <Text style={styles.description}>Pick the Premier League games you want insights on.</Text>
+    <ScrollView contentContainerStyle={{ flex: 1, backgroundColor: "#000" }}>
+      <View style={styles.container}>
+        <Text style={styles.title}>🎯 Welcome to MyFootyAiMate!</Text>
 
-      <Text style={styles.bullet}>• Instant Stats Fetch</Text>
-      <Text style={styles.description}>We pull all the latest team & player stats automatically.</Text>
+        <Text style={styles.bullet}>• Select Upcoming Matches 🏟️</Text>
+        <Text style={styles.description}>Pick the Premier League games you want insights on.</Text>
 
-      <Text style={styles.bullet}>• AI-Powered Predictions</Text>
-      <Text style={styles.description}>Get data-driven predictions for every selected match.</Text>
+        <Text style={styles.bullet}>• Instant Stats Fetch 📊</Text>
+        <Text style={styles.description}>We pull all the latest team & player stats automatically.</Text>
 
-      <Text style={styles.bullet}>• Make Smarter Bets & Fantasy Picks</Text>
-      <Text style={styles.description}>Use our insights to improve your football decisions.</Text>
+        <Text style={styles.bullet}>• AI-Powered Predictions 🤖</Text>
+        <Text style={styles.description}>Get data-driven predictions for every selected match.</Text>
 
-      <Text style={styles.bullet}>• Easy & Intuitive</Text>
-      <Text style={styles.description}>Simple interface. Just select, fetch, and see your predictions.</Text>
+        <Text style={styles.bullet}>• Make Smarter Bets & Fantasy Picks 💡</Text>
+        <Text style={styles.description}>Use our insights to improve your football decisions.</Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.replace("Fixtures")}
-      >
-        <Text style={styles.buttonText}>Get Started</Text>
-      </TouchableOpacity>
+        <Text style={styles.bullet}>• Easy & Intuitive ✅</Text>
+        <Text style={styles.description}>Simple interface. Just select, fetch, and see your predictions.</Text>
 
-      <Text style={styles.disclaimer}>
-        Predictions are for informational purposes only. Gamble responsibly.
-      </Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.replace("Fixtures")}
+        >
+          <Text style={styles.buttonText}>Okay</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.disclaimer}>
+          ⚠️ Predictions are for informational purposes only. Please gamble responsibly. All decisions are at your own risk. MyFootyAiMate does not guarantee winnings or outcomes.
+        </Text>
+      </View>
     </ScrollView>
   );
 }
@@ -64,7 +67,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     justifyContent: "center",
     padding: 24,
     backgroundColor: "#000",
@@ -76,25 +79,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#fff",
   },
-  bullet: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginTop: 12,
-    color: "#0f0",
-  },
-  description: {
-    fontSize: 16,
-    marginBottom: 8,
-    marginLeft: 12,
-    color: "#aaa",
-  },
+  bullet: { fontSize: 18, fontWeight: "600", marginTop: 12, color: "#0f0" },
+  description: { fontSize: 16, marginBottom: 8, marginLeft: 12, color: "#aaa" },
   button: {
     backgroundColor: "#0f0",
     padding: 16,
     borderRadius: 8,
     marginTop: 40,
     alignSelf: "center",
-    paddingHorizontal: 32,
   },
   buttonText: {
     color: "#000",
@@ -103,9 +95,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   disclaimer: {
-    marginTop: 40,
-    textAlign: "center",
-    color: "#666",
+    marginTop: 20,
     fontSize: 12,
+    color: "#ccc",
+    textAlign: "center",
   },
 });
