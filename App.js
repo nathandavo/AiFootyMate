@@ -6,16 +6,12 @@ import LoginScreen from "./src/screens/LoginScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
 import FixturesScreen from "./src/screens/FixturesScreen";
 import PredictionScreen from "./src/screens/PredictionScreen";
-import AccountScreen from "./src/screens/AccountScreen"; // <-- ADDED
+import AccountScreen from "./src/screens/AccountScreen"; // <--- ADDED
 
-// 🔥 Your backend URL (local or deployed)
 export const API_URL = "https://football-predictor-im87.onrender.com";
 
 const Stack = createNativeStackNavigator();
 
-// --------------------------
-// Welcome Screen Component
-// --------------------------
 function WelcomeScreen({ navigation }) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -45,9 +41,6 @@ function WelcomeScreen({ navigation }) {
   );
 }
 
-// --------------------------
-// App Component
-// --------------------------
 export default function App() {
   return (
     <NavigationContainer>
@@ -57,15 +50,12 @@ export default function App() {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Fixtures" component={FixturesScreen} />
         <Stack.Screen name="Prediction" component={PredictionScreen} />
-        <Stack.Screen name="Account" component={AccountScreen} /> {/* <-- ADDED */}
+        <Stack.Screen name="Account" component={AccountScreen} /> 
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
 
-// --------------------------
-// Styles
-// --------------------------
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
