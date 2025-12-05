@@ -1,30 +1,30 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Linking } from "react-native";
 import { API_URL } from "../../App";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function PremiumScreen({ navigation }) {
   const handlePayment = async () => {
     try {
-      const token = await AsyncStorage.getItem("userToken");
       const response = await fetch(`${API_URL}/payment`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
       });
       const data = await response.json();
 
-      if (data.url) {
+      // Safe check
+      if (data?.url) {
+        // Use Linking instead of window.open
         const supported = await Linking.canOpenURL(data.url);
-        if (supported) await Linking.openURL(data.url);
-        else Alert.alert("Error", "Cannot open payment link");
+        if (supported) {
+          await Linking.openURL(data.url);
+        } else {
+          Alert.alert("Error", "Cannot open payment link");
+        }
       } else {
-        Alert.alert("Error", "Failed to create payment session");
+        Alert.alert("Error", "Payment URL not returned");
       }
     } catch (err) {
-      console.log(err);
+      console.log("Payment error:", err);
       Alert.alert("Error", "Something went wrong with payment");
     }
   };
