@@ -37,6 +37,11 @@ function WelcomeScreen({ navigation }) {
       >
         <Text style={styles.buttonText}>Okay</Text>
       </TouchableOpacity>
+
+      {/* Disclaimer */}
+      <Text style={styles.disclaimer}>
+        ⚠️ Predictions are for informational purposes only. Please gamble responsibly. All decisions are at your own risk. MyFootyAiMate does not guarantee winnings or outcomes.
+      </Text>
     </ScrollView>
   );
 }
