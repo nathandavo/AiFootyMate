@@ -49,7 +49,7 @@ export default function LoginScreen({ navigation }) {
         <Text style={styles.backButtonText}>Back to Fixtures</Text>
       </TouchableOpacity>
 
-      <Text style={styles.title}>Football Predictor</Text>
+      <Text style={styles.title}>MyFootyAiMate</Text>
 
       <View style={styles.inputBox}>
         <TextInput
@@ -95,3 +95,4 @@ const styles = StyleSheet.create({
   buttonText: { color: "white", textAlign: "center", fontWeight: "600" },
   registerText: { marginTop: 18, textAlign: "center", color: "#333", fontWeight: "500" },
 });
+
