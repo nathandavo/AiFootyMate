@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { API_URL } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -9,40 +9,42 @@ export default function FixturesScreen({ navigation }) {
   const [token, setToken] = useState(null);
   const [isPremium, setIsPremium] = useState(false);
 
-  const fetchFixtures = useCallback(async () => {
-    try {
-      const response = await fetch(`${API_URL}/fixtures`);
-      const data = await response.json();
-      setFixtures(data);
-    } catch (err) {
-      console.log("Error fetching fixtures:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const getTokenAndUser = useCallback(async () => {
-    const savedToken = await AsyncStorage.getItem("userToken");
-    setToken(savedToken);
-
-    if (savedToken) {
-      try {
-        const res = await fetch(`${API_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${savedToken}` },
-        });
-        const userData = await res.json();
-        // Fix: check if userData.user exists
-        setIsPremium(userData?.user?.isPremium ?? false);
-      } catch (err) {
-        console.log("Error fetching user info:", err);
-      }
-    }
-  }, []);
-
   useEffect(() => {
+    const fetchFixtures = async () => {
+      try {
+        const response = await fetch(`${API_URL}/fixtures`);
+        const data = await response.json();
+        setFixtures(data);
+      } catch (err) {
+        console.log("Error fetching fixtures:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const getTokenAndUser = async () => {
+      const savedToken = await AsyncStorage.getItem("userToken");
+      setToken(savedToken);
+
+      if (savedToken) {
+        try {
+          const res = await fetch(`${API_URL}/auth/me`, {
+            headers: { Authorization: `Bearer ${savedToken}` },
+          });
+          const userData = await res.json();
+
+          // Fix: accurately read isPremium flag
+          // Depending on your backend, it may be under userData.user.isPremium
+          setIsPremium(userData?.user?.isPremium ?? false);
+        } catch (err) {
+          console.log("Error fetching user info:", err);
+        }
+      }
+    };
+
     fetchFixtures();
     getTokenAndUser();
-  }, [fetchFixtures, getTokenAndUser]);
+  }, []);
 
   const handlePredict = (fixture) => {
     if (!token) {
@@ -91,7 +93,15 @@ export default function FixturesScreen({ navigation }) {
         style={styles.loginButton}
         onPress={() => {
           if (token) {
-            Alert.alert("Account Info", isPremium ? "Premium Version" : "Free Version");
+            // Navigate to account or just show version info
+            Alert.alert(
+              "Account Info",
+              isPremium ? "Premium Version" : "Free Version",
+              [
+                { text: "OK" },
+                { text: "Go to Account", onPress: () => navigation.navigate("Account") },
+              ]
+            );
           } else {
             navigation.navigate("Login");
           }
