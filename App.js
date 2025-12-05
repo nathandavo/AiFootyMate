@@ -7,6 +7,7 @@ import RegisterScreen from "./src/screens/RegisterScreen";
 import FixturesScreen from "./src/screens/FixturesScreen";
 import PredictionScreen from "./src/screens/PredictionScreen";
 import AccountScreen from "./src/screens/AccountScreen"; // <--- ADDED
+import PremiumScreen from "./src/screens/PremiumScreen"; // <--- ADDED
 
 export const API_URL = "https://football-predictor-im87.onrender.com";
 
@@ -56,6 +57,7 @@ export default function App() {
         <Stack.Screen name="Fixtures" component={FixturesScreen} />
         <Stack.Screen name="Prediction" component={PredictionScreen} />
         <Stack.Screen name="Account" component={AccountScreen} /> 
+        <Stack.Screen name="Premium" component={PremiumScreen} /> {/* <--- ADDED */}
       </Stack.Navigator>
     </NavigationContainer>
   );
