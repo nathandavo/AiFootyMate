@@ -95,12 +95,12 @@ export default function FixturesScreen({ navigation }) {
   return (
     <View style={styles.container}>
       
-      {/* FIXED BUTTON — shows correct version AND goes to AccountScreen */}
+      {/* FIXED BUTTON — navigate to Account or Login */}
       <TouchableOpacity
         style={styles.loginButton}
         onPress={() => {
           if (token) {
-            navigation.navigate("Account", { isPremium });
+            navigation.navigate("Account"); // no more isPremium param
           } else {
             navigation.navigate("Login");
           }
