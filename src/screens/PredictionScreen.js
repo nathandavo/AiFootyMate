@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } fr
 import { API_URL } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function PredictionScreen({ route }) {
-  const { fixture, date, token: passedToken } = route.params;
+export default function PredictionScreen({ route, navigation }) {
+  const { fixture, date, token: passedToken, isPremium: passedIsPremium } = route.params;
   const [prediction, setPrediction] = useState("");
   const [loading, setLoading] = useState(false);
   const [winChances, setWinChances] = useState({ home: 0, away: 0, draw: 0 });
@@ -64,16 +64,25 @@ export default function PredictionScreen({ route }) {
     }
   };
 
-  const renderFormDots = (form) => form.map((f, i) => {
-    let color = "#ccc";
-    if (f === "W") color = "#4CAF50"; // green
-    else if (f === "D") color = "#FFC107"; // yellow
-    else if (f === "L") color = "#F44336"; // red
-    return <View key={i} style={[styles.dot, { backgroundColor: color }]} />;
-  });
+  const renderFormDots = (form) =>
+    form.map((f, i) => {
+      let color = "#ccc";
+      if (f === "W") color = "#4CAF50"; // green
+      else if (f === "D") color = "#FFC107"; // yellow
+      else if (f === "L") color = "#F44336"; // red
+      return <View key={i} style={[styles.dot, { backgroundColor: color }]} />;
+    });
 
   return (
     <View style={styles.container}>
+      {/* Top Bar with Back Button & Version Info */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.backButtonText}>Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.versionText}>{passedIsPremium ? "Premium Version" : "Free Version"}</Text>
+      </View>
+
       <View style={styles.matchBox}>
         <Text style={styles.matchText}>{fixture.home.name} vs {fixture.away.name}</Text>
         <Text style={styles.dateText}>{date}</Text>
@@ -114,6 +123,11 @@ export default function PredictionScreen({ route }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#e0e0e0", alignItems: "center" },
+  topBar: { width: "100%", flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  backButton: { backgroundColor: "#555", paddingVertical: 4, paddingHorizontal: 10, borderRadius: 6 },
+  backButtonText: { color: "white", fontSize: 12, fontWeight: "bold" },
+  versionText: { fontSize: 12, fontWeight: "bold", color: "#333" },
+
   matchBox: {
     width: "100%",
     backgroundColor: "#f0f0f0",
