@@ -9,8 +9,9 @@ export default function PredictionScreen({ route, navigation }) {
   const [loading, setLoading] = useState(false);
   const [winChances, setWinChances] = useState({ home: 0, away: 0, draw: 0 });
   const [recentForm, setRecentForm] = useState({ home: [], away: [] });
-  const [isPremium, setIsPremium] = useState(null);
+  const [isPremium, setIsPremium] = useState(null); // null = loading
 
+  // Fetch actual user premium status on mount
   useEffect(() => {
     const fetchUserStatus = async () => {
       try {
@@ -125,6 +126,7 @@ export default function PredictionScreen({ route, navigation }) {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
+        {/* Free/Premium label removed safely */}
       </View>
 
       <View style={styles.matchBox}>
@@ -143,7 +145,7 @@ export default function PredictionScreen({ route, navigation }) {
           <Text style={styles.sectionTitle}>Score Prediction</Text>
           <Text style={styles.predictionText}>{prediction}</Text>
 
-          {/* REMOVED WIN PROBABILITY SECTION */}
+          {/* ⛔ NUMERIC WIN PROBABILITY REMOVED AS REQUESTED */}
 
           <Text style={styles.sectionTitle}>Recent Form (Last 5 Matches)</Text>
           <View style={styles.formRow}>
@@ -159,3 +161,5 @@ export default function PredictionScreen({ route, navigation }) {
     </View>
   );
 }
+
+// Styles remain the same as before
