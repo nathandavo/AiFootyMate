@@ -1,41 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { API_URL } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function PredictionScreen({ route, navigation }) {
-  const { fixture, date } = route.params; // remove passedIsPremium
+  const { fixture, date, token: passedToken, isPremium: passedIsPremium } = route.params;
   const [prediction, setPrediction] = useState("");
   const [loading, setLoading] = useState(false);
   const [winChances, setWinChances] = useState({ home: 0, away: 0, draw: 0 });
   const [recentForm, setRecentForm] = useState({ home: [], away: [] });
-  const [isPremium, setIsPremium] = useState(false);
-
-  // Fetch actual user premium status on mount
-  useEffect(() => {
-    const fetchUserStatus = async () => {
-      try {
-        const token = await AsyncStorage.getItem("userToken");
-        if (!token) return;
-
-        const res = await fetch(`${API_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (res.ok && data.user) {
-          setIsPremium(data.user.isPremium);
-        }
-      } catch (err) {
-        console.log("Failed to fetch user info:", err);
-      }
-    };
-    fetchUserStatus();
-  }, []);
 
   const handlePredict = async () => {
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem("userToken");
+      const token = passedToken || (await AsyncStorage.getItem("userToken"));
       if (!token) {
         Alert.alert("Login Required", "You must be logged in to get a prediction.");
         setLoading(false);
@@ -57,39 +35,44 @@ export default function PredictionScreen({ route, navigation }) {
 
       const data = await response.json();
       if (response.ok) {
-        const homeForm = data.stats?.homeStats?.recentForm?.slice(-5) || [];
-        const awayForm = data.stats?.awayStats?.recentForm?.slice(-5) || [];
-        setRecentForm({ home: homeForm, away: awayForm });
-
         setPrediction(data.prediction);
 
-        const homeWins = homeForm.filter(f => f === "W").length;
-        const awayWins = awayForm.filter(f => f === "W").length;
-        const homeDraws = homeForm.filter(f => f === "D").length;
-        const awayDraws = awayForm.filter(f => f === "D").length;
+        if (data.stats) {
+          const homeForm = data.stats.homeStats.recentForm.slice(-5);
+          const awayForm = data.stats.awayStats.recentForm.slice(-5);
+          setRecentForm({ home: homeForm, away: awayForm });
 
-        let homeScore = homeWins + 0.5 * homeDraws || 0;
-        let awayScore = awayWins + 0.5 * awayDraws || 0;
-        let drawScore = homeDraws + awayDraws || 0;
+          const homeWins = homeForm.filter(f => f === "W").length;
+          const awayWins = awayForm.filter(f => f === "W").length;
+          const homeDraws = homeForm.filter(f => f === "D").length;
+          const awayDraws = awayForm.filter(f => f === "D").length;
 
-        let total = homeScore + awayScore + drawScore;
-        if (!total || isNaN(total)) total = 1;
+          // realistic calculation with smoothing
+          let homeScore = homeWins + 0.5 * homeDraws;
+          let awayScore = awayWins + 0.5 * awayDraws;
+          let drawScore = homeDraws + awayDraws;
 
-        let homePct = Math.round((homeScore / total) * 100);
-        let awayPct = Math.round((awayScore / total) * 100);
-        let drawPct = 100 - homePct - awayPct;
+          // total must not be zero
+          let total = homeScore + awayScore + drawScore || 1;
 
-        const minDraw = 20;
-        if (drawPct < minDraw) {
-          const diff = minDraw - drawPct;
-          drawPct = minDraw;
-          const reduceHome = Math.round((homePct / (homePct + awayPct)) * diff);
-          const reduceAway = diff - reduceHome;
-          homePct = Math.max(0, homePct - reduceHome);
-          awayPct = Math.max(0, awayPct - reduceAway);
+          let homePct = Math.round((homeScore / total) * 100);
+          let awayPct = Math.round((awayScore / total) * 100);
+          let drawPct = 100 - homePct - awayPct;
+
+          // enforce minimum draw of 20%
+          const minDraw = 20;
+          if (drawPct < minDraw) {
+            const diff = minDraw - drawPct;
+            drawPct = minDraw;
+            // reduce home/away proportionally
+            const reduceHome = Math.round((homePct / (homePct + awayPct)) * diff);
+            const reduceAway = diff - reduceHome;
+            homePct = Math.max(0, homePct - reduceHome);
+            awayPct = Math.max(0, awayPct - reduceAway);
+          }
+
+          setWinChances({ home: homePct, away: awayPct, draw: drawPct });
         }
-
-        setWinChances({ home: homePct, away: awayPct, draw: drawPct });
       } else {
         Alert.alert("Error", data.error || "Prediction failed");
       }
@@ -101,22 +84,23 @@ export default function PredictionScreen({ route, navigation }) {
     }
   };
 
-  const renderFormDots = (form = []) =>
+  const renderFormDots = (form) =>
     form.map((f, i) => {
       let color = "#ccc";
-      if (f === "W") color = "#4CAF50";
-      else if (f === "D") color = "#FFC107";
-      else if (f === "L") color = "#F44336";
+      if (f === "W") color = "#4CAF50"; // green
+      else if (f === "D") color = "#FFC107"; // yellow
+      else if (f === "L") color = "#F44336"; // red
       return <View key={i} style={[styles.dot, { backgroundColor: color }]} />;
     });
 
   return (
     <View style={styles.container}>
+      {/* Top Bar with Back Button & Version Info */}
       <View style={styles.topBar}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-        {/* Free/Premium label removed safely */}
+        <Text style={styles.versionText}>{passedIsPremium ? "Premium Version" : "Free Version"}</Text>
       </View>
 
       <View style={styles.matchBox}>
@@ -157,4 +141,47 @@ export default function PredictionScreen({ route, navigation }) {
   );
 }
 
-// Styles remain the same as before
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16, backgroundColor: "#e0e0e0", alignItems: "center" },
+  topBar: { width: "100%", flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  backButton: { backgroundColor: "#555", paddingVertical: 4, paddingHorizontal: 10, borderRadius: 6 },
+  backButtonText: { color: "white", fontSize: 12, fontWeight: "bold" },
+  versionText: { fontSize: 12, fontWeight: "bold", color: "#333" },
+
+  matchBox: {
+    width: "100%",
+    backgroundColor: "#f0f0f0",
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#999",
+    marginBottom: 16,
+    alignItems: "center",
+  },
+  matchText: { fontWeight: "bold", fontSize: 18, color: "#333" },
+  dateText: { marginTop: 4, fontSize: 14, color: "#555" },
+  button: {
+    backgroundColor: "#333",
+    padding: 14,
+    borderRadius: 8,
+    width: "100%",
+    marginBottom: 16,
+  },
+  buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
+  predictionCard: {
+    width: "100%",
+    backgroundColor: "#f0f0f0",
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#999",
+  },
+  sectionTitle: { fontWeight: "bold", fontSize: 16, marginTop: 12, marginBottom: 6, color: "#222" },
+  predictionText: { fontSize: 16, marginBottom: 8, color: "#333" },
+  probRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
+  probText: { fontSize: 14, color: "#555" },
+  formRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
+  formLabel: { width: 80, fontSize: 14, color: "#555" },
+  dotsRow: { flexDirection: "row" },
+  dot: { width: 14, height: 14, borderRadius: 7, marginHorizontal: 2 },
+});
