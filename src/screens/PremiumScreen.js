@@ -1,58 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Linking, ActivityIndicator } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Linking } from "react-native";
 import { API_URL } from "../../App";
 
 export default function PremiumScreen({ navigation }) {
-  const [isPremium, setIsPremium] = useState(null); // null = loading
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = await AsyncStorage.getItem("userToken");
-      if (!token) {
-        setIsPremium(false);
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        const premiumStatus =
-          data?.isPremium ??
-          data?.user?.isPremium ??
-          data?.data?.isPremium ??
-          false;
-        setIsPremium(premiumStatus);
-      } catch (err) {
-        console.log("Error fetching user info:", err);
-        setIsPremium(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  if (isPremium === null) {
-    return <ActivityIndicator size="large" style={{ flex: 1 }} color="#888" />;
-  }
-
-  if (isPremium) {
-    return (
-      <View style={styles.container}>
-        {/* Back button */}
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.navigate("Fixtures")}
-        >
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.header}>You are already a Premium user ⭐</Text>
-      </View>
-    );
-  }
 
   const openStripeCheckout = async (url) => {
     const supported = await Linking.canOpenURL(url);
