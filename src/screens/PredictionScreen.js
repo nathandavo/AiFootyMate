@@ -1,14 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { API_URL } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function PredictionScreen({ route, navigation }) {
   const { fixture, date, token: passedToken, isPremium: passedIsPremium } = route.params;
-  const [prediction, setPrediction] = useState("");
+  const [predictionData, setPredictionData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [winChances, setWinChances] = useState({ home: 0, away: 0, draw: 0 });
-  const [recentForm, setRecentForm] = useState({ home: [], away: [] });
 
   const handlePredict = async () => {
     setLoading(true);
@@ -35,40 +33,7 @@ export default function PredictionScreen({ route, navigation }) {
 
       const data = await response.json();
       if (response.ok) {
-        setPrediction(data.prediction);
-
-        if (data.stats) {
-          const homeForm = data.stats.homeStats.recentForm.slice(-5);
-          const awayForm = data.stats.awayStats.recentForm.slice(-5);
-          setRecentForm({ home: homeForm, away: awayForm });
-
-          const homeWins = homeForm.filter(f => f === "W").length;
-          const awayWins = awayForm.filter(f => f === "W").length;
-          const homeDraws = homeForm.filter(f => f === "D").length;
-          const awayDraws = awayForm.filter(f => f === "D").length;
-
-          let homeScore = homeWins + 0.5 * homeDraws;
-          let awayScore = awayWins + 0.5 * awayDraws;
-          let drawScore = homeDraws + awayDraws;
-
-          let total = homeScore + awayScore + drawScore || 1;
-
-          let homePct = Math.round((homeScore / total) * 100);
-          let awayPct = Math.round((awayScore / total) * 100);
-          let drawPct = 100 - homePct - awayPct;
-
-          const minDraw = 20;
-          if (drawPct < minDraw) {
-            const diff = minDraw - drawPct;
-            drawPct = minDraw;
-            const reduceHome = Math.round((homePct / (homePct + awayPct)) * diff);
-            const reduceAway = diff - reduceHome;
-            homePct = Math.max(0, homePct - reduceHome);
-            awayPct = Math.max(0, awayPct - reduceAway);
-          }
-
-          setWinChances({ home: homePct, away: awayPct, draw: drawPct });
-        }
+        setPredictionData(data);
       } else {
         Alert.alert("Error", data.error || "Prediction failed");
       }
@@ -83,50 +48,34 @@ export default function PredictionScreen({ route, navigation }) {
   const renderFormDots = (form) =>
     form.map((f, i) => {
       let color = "#ccc";
-      if (f === "W") color = "#4CAF50";
-      else if (f === "D") color = "#FFC107";
-      else if (f === "L") color = "#F44336";
+      if (f === "W") color = "#4CAF50"; // green
+      else if (f === "D") color = "#FFC107"; // yellow
+      else if (f === "L") color = "#F44336"; // red
       return <View key={i} style={[styles.dot, { backgroundColor: color }]} />;
     });
 
-  // ✅ New single-line win probability bar
-  const renderWinBar = () => {
-    const totalSquares = 10;
-    const homeSquares = Math.round((winChances.home / 100) * totalSquares);
-    const drawSquares = Math.round((winChances.draw / 100) * totalSquares);
-    const awaySquares = totalSquares - homeSquares - drawSquares;
-
-    const squares = [
-      ...Array(homeSquares).fill("#4CAF50"),
-      ...Array(drawSquares).fill("#FFC107"),
-      ...Array(awaySquares).fill("#F44336"),
-    ];
-
+  const renderWinBar = (pct) => {
+    const squares = 10;
+    const filledCount = Math.round((pct / 100) * squares);
     return (
-      <View style={{ alignItems: "center", marginBottom: 12 }}>
-        <View style={{ flexDirection: "row" }}>
-          {squares.map((color, i) => (
-            <View
-              key={i}
-              style={{
-                width: 20,
-                height: 20,
-                backgroundColor: color,
-                marginHorizontal: 1,
-                borderRadius: 4,
-              }}
-            />
-          ))}
-        </View>
-        <Text style={{ marginTop: 4, fontSize: 14, color: "#555" }}>
-          {fixture.home.name}: {winChances.home}% | Draw: {winChances.draw}% | {fixture.away.name}: {winChances.away}%
-        </Text>
+      <View style={styles.barRow}>
+        {Array.from({ length: squares }).map((_, i) => (
+          <View
+            key={i}
+            style={[
+              styles.barSquare,
+              { backgroundColor: i < filledCount ? "#4CAF50" : "#ccc" },
+            ]}
+          />
+        ))}
+        <Text style={styles.barPct}>{pct}%</Text>
       </View>
     );
   };
 
   return (
     <View style={styles.container}>
+      {/* Top Bar */}
       <View style={styles.topBar}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Back</Text>
@@ -134,6 +83,7 @@ export default function PredictionScreen({ route, navigation }) {
         <Text style={styles.versionText}>{passedIsPremium ? "Premium Version" : "Free Version"}</Text>
       </View>
 
+      {/* Match Info */}
       <View style={styles.matchBox}>
         <Text style={styles.matchText}>{fixture.home.name} vs {fixture.away.name}</Text>
         <Text style={styles.dateText}>{date}</Text>
@@ -145,25 +95,35 @@ export default function PredictionScreen({ route, navigation }) {
 
       {loading && <ActivityIndicator size="large" style={{ marginTop: 16 }} color="#888" />}
 
-      {prediction ? (
+      {predictionData && (
         <View style={styles.predictionCard}>
+          {/* Prediction Text */}
           <Text style={styles.sectionTitle}>Score Prediction</Text>
-          <Text style={styles.predictionText}>{prediction}</Text>
+          <Text style={styles.predictionText}>{predictionData.prediction}</Text>
 
+          {/* Win Probability Bars */}
           <Text style={styles.sectionTitle}>Win Probability</Text>
-          {renderWinBar()}
+          {renderWinBar(predictionData.winChances.home)}
+          <Text style={styles.barLabel}>{fixture.home.name}</Text>
 
+          {renderWinBar(predictionData.winChances.draw)}
+          <Text style={styles.barLabel}>Draw</Text>
+
+          {renderWinBar(predictionData.winChances.away)}
+          <Text style={styles.barLabel}>{fixture.away.name}</Text>
+
+          {/* Recent Form */}
           <Text style={styles.sectionTitle}>Recent Form (Last 5 Matches)</Text>
           <View style={styles.formRow}>
             <Text style={styles.formLabel}>{fixture.home.name}:</Text>
-            <View style={styles.dotsRow}>{renderFormDots(recentForm.home)}</View>
+            <View style={styles.dotsRow}>{renderFormDots(predictionData.recentForm.home)}</View>
           </View>
           <View style={styles.formRow}>
             <Text style={styles.formLabel}>{fixture.away.name}:</Text>
-            <View style={styles.dotsRow}>{renderFormDots(recentForm.away)}</View>
+            <View style={styles.dotsRow}>{renderFormDots(predictionData.recentForm.away)}</View>
           </View>
         </View>
-      ) : null}
+      )}
     </View>
   );
 }
@@ -187,13 +147,33 @@ const styles = StyleSheet.create({
   },
   matchText: { fontWeight: "bold", fontSize: 18, color: "#333" },
   dateText: { marginTop: 4, fontSize: 14, color: "#555" },
-  button: { backgroundColor: "#333", padding: 14, borderRadius: 8, width: "100%", marginBottom: 16 },
+  button: {
+    backgroundColor: "#333",
+    padding: 14,
+    borderRadius: 8,
+    width: "100%",
+    marginBottom: 16,
+  },
   buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
-  predictionCard: { width: "100%", backgroundColor: "#f0f0f0", padding: 16, borderRadius: 8, borderWidth: 1, borderColor: "#999" },
+
+  predictionCard: {
+    width: "100%",
+    backgroundColor: "#f0f0f0",
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#999",
+  },
   sectionTitle: { fontWeight: "bold", fontSize: 16, marginTop: 12, marginBottom: 6, color: "#222" },
   predictionText: { fontSize: 16, marginBottom: 8, color: "#333" },
+
   formRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
   formLabel: { width: 80, fontSize: 14, color: "#555" },
   dotsRow: { flexDirection: "row" },
   dot: { width: 14, height: 14, borderRadius: 7, marginHorizontal: 2 },
+
+  barRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
+  barSquare: { width: 20, height: 20, marginHorizontal: 1 },
+  barPct: { marginLeft: 8, fontSize: 14, color: "#555" },
+  barLabel: { fontSize: 12, color: "#333", marginBottom: 8 },
 });
