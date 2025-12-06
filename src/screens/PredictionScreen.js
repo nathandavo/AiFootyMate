@@ -57,39 +57,39 @@ export default function PredictionScreen({ route, navigation }) {
 
       const data = await response.json();
       if (response.ok) {
+        const homeForm = data.stats?.homeStats?.recentForm?.slice(-5) || [];
+        const awayForm = data.stats?.awayStats?.recentForm?.slice(-5) || [];
+        setRecentForm({ home: homeForm, away: awayForm });
+
         setPrediction(data.prediction);
 
-        if (data.stats) {
-          const homeForm = data.stats.homeStats.recentForm.slice(-5);
-          const awayForm = data.stats.awayStats.recentForm.slice(-5);
-          setRecentForm({ home: homeForm, away: awayForm });
+        const homeWins = homeForm.filter(f => f === "W").length;
+        const awayWins = awayForm.filter(f => f === "W").length;
+        const homeDraws = homeForm.filter(f => f === "D").length;
+        const awayDraws = awayForm.filter(f => f === "D").length;
 
-          const homeWins = homeForm.filter(f => f === "W").length;
-          const awayWins = awayForm.filter(f => f === "W").length;
-          const homeDraws = homeForm.filter(f => f === "D").length;
-          const awayDraws = awayForm.filter(f => f === "D").length;
+        let homeScore = homeWins + 0.5 * homeDraws || 0;
+        let awayScore = awayWins + 0.5 * awayDraws || 0;
+        let drawScore = homeDraws + awayDraws || 0;
 
-          let homeScore = homeWins + 0.5 * homeDraws;
-          let awayScore = awayWins + 0.5 * awayDraws;
-          let drawScore = homeDraws + awayDraws;
+        let total = homeScore + awayScore + drawScore;
+        if (!total || isNaN(total)) total = 1;
 
-          let total = homeScore + awayScore + drawScore || 1;
-          let homePct = Math.round((homeScore / total) * 100);
-          let awayPct = Math.round((awayScore / total) * 100);
-          let drawPct = 100 - homePct - awayPct;
+        let homePct = Math.round((homeScore / total) * 100);
+        let awayPct = Math.round((awayScore / total) * 100);
+        let drawPct = 100 - homePct - awayPct;
 
-          const minDraw = 20;
-          if (drawPct < minDraw) {
-            const diff = minDraw - drawPct;
-            drawPct = minDraw;
-            const reduceHome = Math.round((homePct / (homePct + awayPct)) * diff);
-            const reduceAway = diff - reduceHome;
-            homePct = Math.max(0, homePct - reduceHome);
-            awayPct = Math.max(0, awayPct - reduceAway);
-          }
-
-          setWinChances({ home: homePct, away: awayPct, draw: drawPct });
+        const minDraw = 20;
+        if (drawPct < minDraw) {
+          const diff = minDraw - drawPct;
+          drawPct = minDraw;
+          const reduceHome = Math.round((homePct / (homePct + awayPct)) * diff);
+          const reduceAway = diff - reduceHome;
+          homePct = Math.max(0, homePct - reduceHome);
+          awayPct = Math.max(0, awayPct - reduceAway);
         }
+
+        setWinChances({ home: homePct, away: awayPct, draw: drawPct });
       } else {
         Alert.alert("Error", data.error || "Prediction failed");
       }
@@ -101,7 +101,7 @@ export default function PredictionScreen({ route, navigation }) {
     }
   };
 
-  const renderFormDots = (form) =>
+  const renderFormDots = (form = []) =>
     form.map((f, i) => {
       let color = "#ccc";
       if (f === "W") color = "#4CAF50";
@@ -116,7 +116,7 @@ export default function PredictionScreen({ route, navigation }) {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.versionText}>{isPremium ? "Premium Version" : "Free Version"}</Text>
+        {/* Free/Premium label removed safely */}
       </View>
 
       <View style={styles.matchBox}>
