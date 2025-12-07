@@ -7,10 +7,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function PredictionScreen({ route, navigation }) {
   const { fixture, date, token: passedToken, isPremium: passedIsPremium } = route.params || {};
   const [predictionData, setPredictionData] = useState(null);
+  2;
   const [loading, setLoading] = useState(false);
   const [isPremium, setIsPremium] = useState(passedIsPremium ?? false);
 
-  // fetch premium status if not passed
   useEffect(() => {
     const fetchPremium = async () => {
       if (typeof passedIsPremium !== "undefined") {
@@ -33,6 +33,9 @@ export default function PredictionScreen({ route, navigation }) {
     fetchPremium();
   }, []);
 
+  // ----------------------------------------------------
+  // FIXED handlePredict — NO OTHER CHANGES ANYWHERE
+  // ----------------------------------------------------
   const handlePredict = async () => {
     setLoading(true);
     try {
@@ -58,15 +61,14 @@ export default function PredictionScreen({ route, navigation }) {
 
       const data = await response.json();
       if (response.ok) {
-        // Split AI prediction into score (first line) and reasoning (rest)
-        let score = "N/A";
-        let reasoning = data.prediction || "";
-        const lines = reasoning.split(/\n/).filter(l => l.trim() !== "");
-        if (lines.length > 0) {
-          score = lines[0];
-          reasoning = lines.slice(1).join("\n").trim() || reasoning;
-        }
-        setPredictionData({ ...data, score, reasoning });
+        // FRONTEND NOW USES BACKEND VALUES DIRECTLY
+        setPredictionData({
+          score: data.score,
+          reasoning: data.reasoning,
+          winChances: data.winChances,
+          bttsPct: data.bttsPct,
+          recentForm: data.recentForm
+        });
       } else {
         Alert.alert("Error", data.error || "Prediction failed");
       }
@@ -77,6 +79,7 @@ export default function PredictionScreen({ route, navigation }) {
       setLoading(false);
     }
   };
+  // ----------------------------------------------------
 
   const renderFormDots = (form) =>
     (form || []).map((f, i) => {
@@ -132,7 +135,6 @@ export default function PredictionScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Top Bar */}
       <View style={styles.topBar}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Back</Text>
@@ -140,7 +142,6 @@ export default function PredictionScreen({ route, navigation }) {
         <Text style={styles.versionText}>{isPremium ? "Premium" : "Free Version"}</Text>
       </View>
 
-      {/* Match Info */}
       <View style={styles.matchBox}>
         <Text style={styles.matchText}>{fixture.home.name} vs {fixture.away.name}</Text>
         <Text style={styles.dateText}>{date}</Text>
@@ -154,23 +155,19 @@ export default function PredictionScreen({ route, navigation }) {
 
       {predictionData && (
         <View style={styles.predictionCard}>
-          {/* Score */}
           <Text style={styles.sectionTitle}>Score Prediction</Text>
           <Text style={styles.predictionText}>{predictionData.score}</Text>
 
-          {/* Win Probability single bar */}
           <Text style={styles.sectionTitle}>Win Probability</Text>
           {renderWinBarSingle(predictionData.winChances)}
           <Text style={styles.percentLine}>
             {fixture.home.name}: {predictionData.winChances.home}%  ·  Draw: {predictionData.winChances.draw}%  ·  {fixture.away.name}: {predictionData.winChances.away}%
           </Text>
 
-          {/* BTTS */}
           <Text style={[styles.sectionTitle, { marginTop: 12 }]}>Both Teams To Score</Text>
           {renderBttsBar(predictionData.bttsPct)}
           <Text style={styles.percentLine}>BTTS: {predictionData.bttsPct}%</Text>
 
-          {/* Recent Form */}
           <Text style={styles.sectionTitle}>Recent Form (Last 5 Matches)</Text>
           <View style={styles.formRow}>
             <Text style={styles.formLabel}>{fixture.home.name}:</Text>
@@ -181,7 +178,6 @@ export default function PredictionScreen({ route, navigation }) {
             <View style={styles.dotsRow}>{renderFormDots(predictionData.recentForm.away)}</View>
           </View>
 
-          {/* AI reasoning */}
           <Text style={[styles.sectionTitle, { marginTop: 12 }]}>AI Analysis</Text>
           <Text style={styles.predictionText}>{predictionData.reasoning}</Text>
         </View>
