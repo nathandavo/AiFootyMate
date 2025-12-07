@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { API_URL } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -54,40 +54,42 @@ export default function PredictionScreen({ route, navigation }) {
       return <View key={i} style={[styles.dot, { backgroundColor: color }]} />;
     });
 
-  const renderWinBar = (homePct, drawPct, awayPct) => {
+  const renderWinBar = ({ home, draw, away }) => {
     const squares = 10;
-    const homeSquares = Math.round((homePct / 100) * squares);
-    const drawSquares = Math.round((drawPct / 100) * squares);
-    const awaySquares = squares - homeSquares - drawSquares;
+    const homeCount = Math.round((home / 100) * squares);
+    const drawCount = Math.round((draw / 100) * squares);
+    const awayCount = squares - homeCount - drawCount;
+
+    const barArray = [
+      ...Array(homeCount).fill("#4CAF50"),
+      ...Array(drawCount).fill("#FFA500"),
+      ...Array(awayCount).fill("#F44336")
+    ];
 
     return (
       <View style={styles.barRow}>
-        {Array.from({ length: homeSquares }).map((_, i) => (
-          <View key={`h${i}`} style={[styles.barSquare, { backgroundColor: "#4CAF50" }]} />
+        {barArray.map((color, i) => (
+          <View key={i} style={[styles.barSquare, { backgroundColor: color }]} />
         ))}
-        {Array.from({ length: drawSquares }).map((_, i) => (
-          <View key={`d${i}`} style={[styles.barSquare, { backgroundColor: "#FFA500" }]} />
-        ))}
-        {Array.from({ length: awaySquares }).map((_, i) => (
-          <View key={`a${i}`} style={[styles.barSquare, { backgroundColor: "#F44336" }]} />
-        ))}
+        <Text style={styles.barPct}>
+          {`Home: ${home}%  Draw: ${draw}%  Away: ${away}%`}
+        </Text>
       </View>
     );
   };
 
   const renderBttsBar = (bttsPct) => {
     const squares = 10;
-    const yesSquares = Math.round((bttsPct / 100) * squares);
-    const noSquares = squares - yesSquares;
+    const yesCount = Math.round((bttsPct / 100) * squares);
+    const noCount = squares - yesCount;
+    const barArray = [...Array(yesCount).fill("#4CAF50"), ...Array(noCount).fill("#F44336")];
 
     return (
       <View style={styles.barRow}>
-        {Array.from({ length: yesSquares }).map((_, i) => (
-          <View key={`y${i}`} style={[styles.barSquare, { backgroundColor: "#4CAF50" }]} />
+        {barArray.map((color, i) => (
+          <View key={i} style={[styles.barSquare, { backgroundColor: color }]} />
         ))}
-        {Array.from({ length: noSquares }).map((_, i) => (
-          <View key={`n${i}`} style={[styles.barSquare, { backgroundColor: "#F44336" }]} />
-        ))}
+        <Text style={styles.barPct}>{`BTTS: ${bttsPct}%`}</Text>
       </View>
     );
   };
@@ -99,7 +101,9 @@ export default function PredictionScreen({ route, navigation }) {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.versionText}>{passedIsPremium ? "Premium Version" : "Free Version"}</Text>
+        <Text style={styles.versionText}>
+          {predictionData?.isPremium || passedIsPremium ? "Premium Version" : "Free Version"}
+        </Text>
       </View>
 
       {/* Match Info */}
@@ -116,26 +120,17 @@ export default function PredictionScreen({ route, navigation }) {
 
       {predictionData && (
         <View style={styles.predictionCard}>
-          {/* Score */}
+          {/* Score Prediction & AI Reasoning */}
           <Text style={styles.sectionTitle}>Score Prediction</Text>
-          <Text style={styles.predictionText}>{predictionData.score}</Text>
-          <Text style={styles.explanationText}>{predictionData.explanation}</Text>
+          <Text style={styles.predictionText}>{predictionData.prediction}</Text>
 
           {/* Win Probability */}
           <Text style={styles.sectionTitle}>Win Probability</Text>
-          {renderWinBar(
-            predictionData.winChances.home,
-            predictionData.winChances.draw,
-            predictionData.winChances.away
-          )}
-          <Text style={styles.barLabel}>
-            {fixture.home.name}: {predictionData.winChances.home}%, Draw: {predictionData.winChances.draw}%, {fixture.away.name}: {predictionData.winChances.away}%
-          </Text>
+          {renderWinBar(predictionData.winChances)}
 
           {/* BTTS */}
-          <Text style={styles.sectionTitle}>Both Teams To Score (BTTS)</Text>
+          <Text style={styles.sectionTitle}>Both Teams to Score</Text>
           {renderBttsBar(predictionData.bttsPct)}
-          <Text style={styles.barLabel}>{predictionData.bttsPct}% Yes / {100 - predictionData.bttsPct}% No</Text>
 
           {/* Recent Form */}
           <Text style={styles.sectionTitle}>Recent Form (Last 5 Matches)</Text>
@@ -190,15 +185,14 @@ const styles = StyleSheet.create({
     borderColor: "#999",
   },
   sectionTitle: { fontWeight: "bold", fontSize: 16, marginTop: 12, marginBottom: 6, color: "#222" },
-  predictionText: { fontSize: 18, fontWeight: "bold", marginBottom: 4, color: "#333" },
-  explanationText: { fontSize: 14, marginBottom: 12, color: "#555" },
+  predictionText: { fontSize: 16, marginBottom: 8, color: "#333" },
 
   formRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
   formLabel: { width: 80, fontSize: 14, color: "#555" },
   dotsRow: { flexDirection: "row" },
   dot: { width: 14, height: 14, borderRadius: 7, marginHorizontal: 2 },
 
-  barRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
+  barRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
   barSquare: { width: 20, height: 20, marginHorizontal: 1 },
-  barLabel: { fontSize: 12, color: "#333", marginBottom: 8 },
+  barPct: { marginLeft: 8, fontSize: 14, color: "#555" },
 });
