@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { API_URL } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -48,13 +48,13 @@ export default function PredictionScreen({ route, navigation }) {
   const renderFormDots = (form) =>
     form.map((f, i) => {
       let color = "#ccc";
-      if (f === "W") color = "#4CAF50"; // green
-      else if (f === "D") color = "#FFC107"; // yellow
-      else if (f === "L") color = "#F44336"; // red
+      if (f === "W") color = "#4CAF50";
+      else if (f === "D") color = "#FFC107";
+      else if (f === "L") color = "#F44336";
       return <View key={i} style={[styles.dot, { backgroundColor: color }]} />;
     });
 
-  const renderWinBar = (pct) => {
+  const renderBar = (pct) => {
     const squares = 10;
     const filledCount = Math.round((pct / 100) * squares);
     return (
@@ -97,27 +97,38 @@ export default function PredictionScreen({ route, navigation }) {
 
       {predictionData && (
         <View style={styles.predictionCard}>
-          {/* Prediction Text */}
-          <Text style={styles.sectionTitle}>Score Prediction</Text>
-          <Text style={styles.predictionText}>{predictionData.prediction}</Text>
 
-          {/* Win Probability Bars */}
+          {/* SCORE PREDICTION */}
+          <Text style={styles.sectionTitle}>Score Prediction</Text>
+          <Text style={styles.predictionText}>{predictionData.score}</Text>
+
+          {/* SHORT EXPLANATION */}
+          <Text style={styles.sectionTitle}>AI Reasoning</Text>
+          <Text style={styles.predictionText}>{predictionData.explanation}</Text>
+
+          {/* WIN PROBABILITY BARS */}
           <Text style={styles.sectionTitle}>Win Probability</Text>
-          {renderWinBar(predictionData.winChances.home)}
+          {renderBar(predictionData.winChances.home)}
           <Text style={styles.barLabel}>{fixture.home.name}</Text>
 
-          {renderWinBar(predictionData.winChances.draw)}
+          {renderBar(predictionData.winChances.draw)}
           <Text style={styles.barLabel}>Draw</Text>
 
-          {renderWinBar(predictionData.winChances.away)}
+          {renderBar(predictionData.winChances.away)}
           <Text style={styles.barLabel}>{fixture.away.name}</Text>
 
-          {/* Recent Form */}
+          {/* BTTS BAR */}
+          <Text style={styles.sectionTitle}>BTTS Probability</Text>
+          {renderBar(predictionData.bttsPct)}
+
+          {/* RECENT FORM */}
           <Text style={styles.sectionTitle}>Recent Form (Last 5 Matches)</Text>
+
           <View style={styles.formRow}>
             <Text style={styles.formLabel}>{fixture.home.name}:</Text>
             <View style={styles.dotsRow}>{renderFormDots(predictionData.recentForm.home)}</View>
           </View>
+
           <View style={styles.formRow}>
             <Text style={styles.formLabel}>{fixture.away.name}:</Text>
             <View style={styles.dotsRow}>{renderFormDots(predictionData.recentForm.away)}</View>
@@ -164,6 +175,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#999",
   },
+
   sectionTitle: { fontWeight: "bold", fontSize: 16, marginTop: 12, marginBottom: 6, color: "#222" },
   predictionText: { fontSize: 16, marginBottom: 8, color: "#333" },
 
