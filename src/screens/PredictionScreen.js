@@ -58,7 +58,15 @@ export default function PredictionScreen({ route, navigation }) {
 
       const data = await response.json();
       if (response.ok) {
-        setPredictionData(data);
+        // Split AI prediction into score (first line) and reasoning (rest)
+        let score = "N/A";
+        let reasoning = data.prediction || "";
+        const lines = reasoning.split(/\n/).filter(l => l.trim() !== "");
+        if (lines.length > 0) {
+          score = lines[0];
+          reasoning = lines.slice(1).join("\n").trim() || reasoning;
+        }
+        setPredictionData({ ...data, score, reasoning });
       } else {
         Alert.alert("Error", data.error || "Prediction failed");
       }
@@ -80,12 +88,10 @@ export default function PredictionScreen({ route, navigation }) {
     });
 
   const renderWinBarSingle = (winChances) => {
-    // winChances: { home, draw, away } (numbers summing to 100)
     const totalSquares = 10;
     const h = Math.round((winChances.home / 100) * totalSquares);
     const d = Math.round((winChances.draw / 100) * totalSquares);
     let a = Math.round((winChances.away / 100) * totalSquares);
-    // adjust to ensure sum === totalSquares
     let sum = h + d + a;
     if (sum !== totalSquares) {
       const diff = totalSquares - sum;
@@ -94,10 +100,9 @@ export default function PredictionScreen({ route, navigation }) {
     }
 
     const squares = [];
-    for (let i = 0; i < h; i++) squares.push({ color: "#4CAF50" }); // home green
-    for (let i = 0; i < d; i++) squares.push({ color: "#FFC107" }); // draw yellow
-    for (let i = 0; i < a; i++) squares.push({ color: "#F44336" }); // away red
-    // fill to total with gray if any missing
+    for (let i = 0; i < h; i++) squares.push({ color: "#4CAF50" });
+    for (let i = 0; i < d; i++) squares.push({ color: "#FFC107" });
+    for (let i = 0; i < a; i++) squares.push({ color: "#F44336" });
     while (squares.length < totalSquares) squares.push({ color: "#ccc" });
 
     return (
@@ -114,8 +119,8 @@ export default function PredictionScreen({ route, navigation }) {
     const yesCount = Math.round((bttsPct / 100) * total);
     const noCount = total - yesCount;
     const squares = [];
-    for (let i = 0; i < yesCount; i++) squares.push({ color: "#4CAF50" }); // yes green
-    for (let i = 0; i < noCount; i++) squares.push({ color: "#F44336" }); // no red
+    for (let i = 0; i < yesCount; i++) squares.push({ color: "#4CAF50" });
+    for (let i = 0; i < noCount; i++) squares.push({ color: "#F44336" });
     return (
       <View style={styles.barRow}>
         {squares.map((s, i) => (
