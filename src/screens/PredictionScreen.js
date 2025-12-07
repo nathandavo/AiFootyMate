@@ -1,39 +1,12 @@
-// src/screens/PredictionScreen.js
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { API_URL } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function PredictionScreen({ route, navigation }) {
-  const { fixture, date, token: passedToken, isPremium: passedIsPremium } = route.params ?? {};
+  const { fixture, date, token: passedToken, isPremium: passedIsPremium } = route.params;
   const [predictionData, setPredictionData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [isPremium, setIsPremium] = useState(passedIsPremium ?? null); // null = unknown/loading
-
-  useEffect(() => {
-    // if passedIsPremium is undefined, try to fetch /auth/me
-    const fetchMeIfNeeded = async () => {
-      if (passedIsPremium !== undefined) {
-        setIsPremium(passedIsPremium);
-        return;
-      }
-      try {
-        const token = await AsyncStorage.getItem("userToken");
-        if (!token) {
-          setIsPremium(false);
-          return;
-        }
-        const res = await fetch(`${API_URL}/auth/me`, { headers: { Authorization: `Bearer ${token}` }});
-        const data = await res.json();
-        const premiumStatus = data?.isPremium ?? data?.user?.isPremium ?? data?.data?.isPremium ?? false;
-        setIsPremium(premiumStatus);
-      } catch (err) {
-        console.log("Could not fetch /auth/me:", err);
-        setIsPremium(false);
-      }
-    };
-    fetchMeIfNeeded();
-  }, [passedIsPremium]);
 
   const handlePredict = async () => {
     setLoading(true);
@@ -52,9 +25,9 @@ export default function PredictionScreen({ route, navigation }) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          fixtureId: fixture?.id,
-          homeTeam: fixture?.home?.id,
-          awayTeam: fixture?.away?.id,
+          fixtureId: fixture.id,
+          homeTeam: fixture.home.id,
+          awayTeam: fixture.away.id,
         }),
       });
 
@@ -73,7 +46,7 @@ export default function PredictionScreen({ route, navigation }) {
   };
 
   const renderFormDots = (form) =>
-    (form || []).map((f, i) => {
+    form.map((f, i) => {
       let color = "#ccc";
       if (f === "W") color = "#4CAF50";
       else if (f === "D") color = "#FFC107";
@@ -81,59 +54,40 @@ export default function PredictionScreen({ route, navigation }) {
       return <View key={i} style={[styles.dot, { backgroundColor: color }]} />;
     });
 
-  // single 10-block win bar combined: home (green), draw (orange), away (red)
-  const renderCombinedWinBar = (homePct, drawPct, awayPct) => {
-    // Ensure integers and sum=100
-    homePct = Math.max(0, Math.round(homePct || 0));
-    drawPct = Math.max(0, Math.round(drawPct || 0));
-    awayPct = Math.max(0, Math.round(awayPct || 0));
-    // Fix rounding drift
-    let sum = homePct + drawPct + awayPct;
-    if (sum !== 100) {
-      const diff = 100 - sum;
-      // add to home by default
-      homePct += diff;
-      sum = homePct + drawPct + awayPct;
-    }
-    const totalBlocks = 10;
-    const homeBlocks = Math.round((homePct / 100) * totalBlocks);
-    const drawBlocks = Math.round((drawPct / 100) * totalBlocks);
-    // ensure the blocks sum to totalBlocks
-    let awayBlocks = totalBlocks - homeBlocks - drawBlocks;
-    if (awayBlocks < 0) awayBlocks = 0;
+  const renderWinBar = (homePct, drawPct, awayPct) => {
+    const squares = 10;
+    const homeSquares = Math.round((homePct / 100) * squares);
+    const drawSquares = Math.round((drawPct / 100) * squares);
+    const awaySquares = squares - homeSquares - drawSquares;
 
-    const blocks = [];
-    for (let i = 0; i < homeBlocks; i++) blocks.push(<View key={`h${i}`} style={[styles.block, { backgroundColor: "#4CAF50" }]} />);
-    for (let i = 0; i < drawBlocks; i++) blocks.push(<View key={`d${i}`} style={[styles.block, { backgroundColor: "#FF9800" }]} />);
-    for (let i = 0; i < awayBlocks; i++) blocks.push(<View key={`a${i}`} style={[styles.block, { backgroundColor: "#F44336" }]} />);
-    // in rare rounding cases, if blocks < totalBlocks, pad with grey
-    while (blocks.length < totalBlocks) blocks.push(<View key={`p${blocks.length}`} style={[styles.block, { backgroundColor: "#ccc" }]} />);
     return (
-      <View style={{ alignItems: "center", marginBottom: 8 }}>
-        <View style={styles.barRow}>{blocks}</View>
-        <View style={styles.pctRow}>
-          <Text style={styles.pctText}>Home: {homePct}%</Text>
-          <Text style={styles.pctText}>Draw: {drawPct}%</Text>
-          <Text style={styles.pctText}>Away: {awayPct}%</Text>
-        </View>
+      <View style={styles.barRow}>
+        {Array.from({ length: homeSquares }).map((_, i) => (
+          <View key={`h${i}`} style={[styles.barSquare, { backgroundColor: "#4CAF50" }]} />
+        ))}
+        {Array.from({ length: drawSquares }).map((_, i) => (
+          <View key={`d${i}`} style={[styles.barSquare, { backgroundColor: "#FFA500" }]} />
+        ))}
+        {Array.from({ length: awaySquares }).map((_, i) => (
+          <View key={`a${i}`} style={[styles.barSquare, { backgroundColor: "#F44336" }]} />
+        ))}
       </View>
     );
   };
 
-  // BTTS bar: single 10-block (green = yes, red = no)
   const renderBttsBar = (bttsPct) => {
-    const yesBlocks = Math.round((bttsPct / 100) * 10);
-    const noBlocks = 10 - yesBlocks;
-    const blocks = [];
-    for (let i = 0; i < yesBlocks; i++) blocks.push(<View key={`y${i}`} style={[styles.blockSmall, { backgroundColor: "#4CAF50" }]} />);
-    for (let i = 0; i < noBlocks; i++) blocks.push(<View key={`n${i}`} style={[styles.blockSmall, { backgroundColor: "#F44336" }]} />);
+    const squares = 10;
+    const yesSquares = Math.round((bttsPct / 100) * squares);
+    const noSquares = squares - yesSquares;
+
     return (
-      <View style={{ alignItems: "center", marginTop: 6 }}>
-        <View style={styles.barRowSmall}>{blocks}</View>
-        <View style={styles.pctRow}>
-          <Text style={styles.pctText}>BTTS Yes: {bttsPct}%</Text>
-          <Text style={styles.pctText}>No: {100 - bttsPct}%</Text>
-        </View>
+      <View style={styles.barRow}>
+        {Array.from({ length: yesSquares }).map((_, i) => (
+          <View key={`y${i}`} style={[styles.barSquare, { backgroundColor: "#4CAF50" }]} />
+        ))}
+        {Array.from({ length: noSquares }).map((_, i) => (
+          <View key={`n${i}`} style={[styles.barSquare, { backgroundColor: "#F44336" }]} />
+        ))}
       </View>
     );
   };
@@ -145,13 +99,13 @@ export default function PredictionScreen({ route, navigation }) {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.versionText}>{isPremium ? "Premium Version" : "Free Version"}</Text>
+        <Text style={styles.versionText}>{passedIsPremium ? "Premium Version" : "Free Version"}</Text>
       </View>
 
-      {/* Match info */}
+      {/* Match Info */}
       <View style={styles.matchBox}>
-        <Text style={styles.matchText}>{fixture?.home?.name ?? 'Home'} vs {fixture?.away?.name ?? 'Away'}</Text>
-        <Text style={styles.dateText}>{date ?? ''}</Text>
+        <Text style={styles.matchText}>{fixture.home.name} vs {fixture.away.name}</Text>
+        <Text style={styles.dateText}>{date}</Text>
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handlePredict} disabled={loading}>
@@ -164,29 +118,34 @@ export default function PredictionScreen({ route, navigation }) {
         <View style={styles.predictionCard}>
           {/* Score */}
           <Text style={styles.sectionTitle}>Score Prediction</Text>
-          <Text style={styles.predictionText}>{predictionData.score ?? predictionData.explanation ?? 'No score returned'}</Text>
+          <Text style={styles.predictionText}>{predictionData.score}</Text>
+          <Text style={styles.explanationText}>{predictionData.explanation}</Text>
 
-          {/* AI explanation */}
-          <Text style={styles.sectionTitle}>AI Explanation</Text>
-          <Text style={styles.predictionText}>{predictionData.explanation ?? 'No explanation returned'}</Text>
-
-          {/* Win Probability - single 10-block */}
+          {/* Win Probability */}
           <Text style={styles.sectionTitle}>Win Probability</Text>
-          {renderCombinedWinBar(predictionData.winChances?.home, predictionData.winChances?.draw, predictionData.winChances?.away)}
+          {renderWinBar(
+            predictionData.winChances.home,
+            predictionData.winChances.draw,
+            predictionData.winChances.away
+          )}
+          <Text style={styles.barLabel}>
+            {fixture.home.name}: {predictionData.winChances.home}%, Draw: {predictionData.winChances.draw}%, {fixture.away.name}: {predictionData.winChances.away}%
+          </Text>
 
-          {/* BTTS bar */}
-          <Text style={styles.sectionTitle}>BTTS</Text>
-          {renderBttsBar(predictionData.bttsPct ?? 0)}
+          {/* BTTS */}
+          <Text style={styles.sectionTitle}>Both Teams To Score (BTTS)</Text>
+          {renderBttsBar(predictionData.bttsPct)}
+          <Text style={styles.barLabel}>{predictionData.bttsPct}% Yes / {100 - predictionData.bttsPct}% No</Text>
 
           {/* Recent Form */}
           <Text style={styles.sectionTitle}>Recent Form (Last 5 Matches)</Text>
           <View style={styles.formRow}>
-            <Text style={styles.formLabel}>{fixture?.home?.name ?? 'Home'}:</Text>
-            <View style={styles.dotsRow}>{renderFormDots(predictionData.recentForm?.home ?? [])}</View>
+            <Text style={styles.formLabel}>{fixture.home.name}:</Text>
+            <View style={styles.dotsRow}>{renderFormDots(predictionData.recentForm.home)}</View>
           </View>
           <View style={styles.formRow}>
-            <Text style={styles.formLabel}>{fixture?.away?.name ?? 'Away'}:</Text>
-            <View style={styles.dotsRow}>{renderFormDots(predictionData.recentForm?.away ?? [])}</View>
+            <Text style={styles.formLabel}>{fixture.away.name}:</Text>
+            <View style={styles.dotsRow}>{renderFormDots(predictionData.recentForm.away)}</View>
           </View>
         </View>
       )}
@@ -231,22 +190,15 @@ const styles = StyleSheet.create({
     borderColor: "#999",
   },
   sectionTitle: { fontWeight: "bold", fontSize: 16, marginTop: 12, marginBottom: 6, color: "#222" },
-  predictionText: { fontSize: 16, marginBottom: 8, color: "#333" },
+  predictionText: { fontSize: 18, fontWeight: "bold", marginBottom: 4, color: "#333" },
+  explanationText: { fontSize: 14, marginBottom: 12, color: "#555" },
 
   formRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  formLabel: { width: 100, fontSize: 14, color: "#555" },
+  formLabel: { width: 80, fontSize: 14, color: "#555" },
   dotsRow: { flexDirection: "row" },
   dot: { width: 14, height: 14, borderRadius: 7, marginHorizontal: 2 },
 
-  // Win bar (10 blocks)
-  barRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 6 },
-  block: { width: 22, height: 22, marginHorizontal: 2, borderRadius: 3 },
-
-  // BTTS smaller blocks
-  barRowSmall: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 4 },
-  blockSmall: { width: 18, height: 18, marginHorizontal: 2, borderRadius: 3 },
-
-  pctRow: { flexDirection: "row", justifyContent: "space-between", width: "100%", paddingHorizontal: 8 },
-  pctText: { fontSize: 13, color: "#333" },
-
+  barRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
+  barSquare: { width: 20, height: 20, marginHorizontal: 1 },
+  barLabel: { fontSize: 12, color: "#333", marginBottom: 8 },
 });
