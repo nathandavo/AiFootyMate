@@ -1,28 +1,29 @@
-import Constants from "expo-constants";
+import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Linking } from "react-native";
+import Constants from "expo-constants";
 
-const API_URL = Constants?.expoConfig?.extra?.apiUrl ?? null;
-
-console.log("🔍 API_URL:", API_URL);
+const API_URL = Constants?.expoConfig?.extra?.apiUrl;
 
 export default function PremiumScreen({ navigation }) {
   const handlePayment = async () => {
     try {
+      console.log("🔍 API_URL:", API_URL);
+
       const response = await fetch(`${API_URL}/stripe/payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
 
-      console.log("🔍 Response status:", response.status);
+      console.log("🔍 Backend response status:", response.status);
 
       const data = await response.json();
-      console.log("🔍 Response JSON:", data);
+      console.log("🔍 Backend response JSON:", data);
 
       if (data?.url) {
         Linking.openURL(data.url);
       }
     } catch (err) {
-      console.log("❌ Front-end payment error:", err);
+      console.log("❌ Frontend payment error:", err);
     }
   };
 
