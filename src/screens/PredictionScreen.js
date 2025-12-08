@@ -33,9 +33,6 @@ export default function PredictionScreen({ route, navigation }) {
     fetchPremium();
   }, []);
 
-  // ----------------------------------------------------
-  // FIXED handlePredict — NO OTHER CHANGES ANYWHERE
-  // ----------------------------------------------------
   const handlePredict = async () => {
     setLoading(true);
     try {
@@ -61,7 +58,6 @@ export default function PredictionScreen({ route, navigation }) {
 
       const data = await response.json();
       if (response.ok) {
-        // FRONTEND NOW USES BACKEND VALUES DIRECTLY
         setPredictionData({
           score: data.score,
           reasoning: data.reasoning,
@@ -79,7 +75,6 @@ export default function PredictionScreen({ route, navigation }) {
       setLoading(false);
     }
   };
-  // ----------------------------------------------------
 
   const renderFormDots = (form) =>
     (form || []).map((f, i) => {
@@ -225,12 +220,4 @@ const styles = StyleSheet.create({
   sectionTitle: { fontWeight: "bold", fontSize: 16, marginTop: 12, marginBottom: 6, color: "#222" },
   predictionText: { fontSize: 16, marginBottom: 8, color: "#333" },
 
-  formRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  formLabel: { width: 100, fontSize: 14, color: "#555" },
-  dotsRow: { flexDirection: "row" },
-  dot: { width: 14, height: 14, borderRadius: 7, marginHorizontal: 2 },
-
-  barRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  barSquare: { width: 26, height: 14, marginHorizontal: 1, borderRadius: 3 },
-  percentLine: { marginTop: 6, fontSize: 14, color: "#333" },
-});
+  formRow: { flexDirection: "
