@@ -33,7 +33,7 @@ export default function PredictionScreen({ route, navigation }) {
   }, []);
 
   // ----------------------------------------------------
-  // FIXED handlePredict — redirects free users to PremiumScreen
+  // FIXED handlePredict — redirects free users to Premium
   // ----------------------------------------------------
   const handlePredict = async () => {
     setLoading(true);
@@ -70,8 +70,8 @@ export default function PredictionScreen({ route, navigation }) {
           recentForm: data.recentForm
         });
       } else if (response.status === 403) {
-        // Free user has already used prediction → redirect to PremiumScreen
-        navigation.navigate('PremiumScreen');
+        // Free user has already used prediction → redirect to Premium screen
+        navigation.navigate('Premium'); // <-- FIXED
       } else {
         Alert.alert("Error", data.error || "Prediction failed");
       }
@@ -142,20 +142,7 @@ export default function PredictionScreen({ route, navigation }) {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={styles.versionText}>{isPremium ? "Premium" : "Free Version"}</Text>
-
-          {/* NEW: Unlimited Predictions Button */}
-          {!isPremium && (
-            <TouchableOpacity
-              style={styles.unlimitedButton}
-              onPress={() => navigation.navigate('PremiumScreen')}
-            >
-              <Text style={styles.unlimitedButtonText}>Unlimited Predictions</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        <Text style={styles.versionText}>{isPremium ? "Premium" : "Free Version"}</Text>
       </View>
 
       <View style={styles.matchBox}>
@@ -208,9 +195,6 @@ const styles = StyleSheet.create({
   backButton: { backgroundColor: "#555", paddingVertical: 4, paddingHorizontal: 10, borderRadius: 6 },
   backButtonText: { color: "white", fontSize: 12, fontWeight: "bold" },
   versionText: { fontSize: 12, fontWeight: "bold", color: "#333" },
-
-  unlimitedButton: { marginLeft: 10, backgroundColor: "#ff9900", paddingVertical: 4, paddingHorizontal: 8, borderRadius: 6 },
-  unlimitedButtonText: { color: "white", fontWeight: "bold", fontSize: 12 },
 
   matchBox: {
     width: "100%",
