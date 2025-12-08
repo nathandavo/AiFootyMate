@@ -15,17 +15,15 @@ export default function PremiumScreen({ navigation }) {
 
   const handlePayment = async () => {
     try {
-      const response = await fetch(`${API_URL}/stripe/checkout`, { // hit your stripe checkout route
+      const response = await fetch(`${API_URL}/stripe/checkout`, { // ✅ updated route
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
-
       const data = await response.json();
 
       if (data.url) {
         await openStripeCheckout(data.url);
       } else {
-        console.log("Stripe response:", data);
         Alert.alert("Error", "Failed to create payment session");
       }
     } catch (err) {
@@ -36,6 +34,7 @@ export default function PremiumScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* Back button */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.navigate("Fixtures")}
@@ -62,6 +61,7 @@ const styles = StyleSheet.create({
   button: { backgroundColor: "#333", padding: 16, borderRadius: 8 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold", textAlign: "center" },
 
+  /* Back button style */
   backButton: {
     position: "absolute",
     top: 20,
