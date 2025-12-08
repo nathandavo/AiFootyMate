@@ -33,7 +33,7 @@ export default function PredictionScreen({ route, navigation }) {
   }, []);
 
   // ----------------------------------------------------
-  // FIXED handlePredict — NO OTHER CHANGES ANYWHERE
+  // FIXED handlePredict — redirects free users to PremiumScreen
   // ----------------------------------------------------
   const handlePredict = async () => {
     setLoading(true);
@@ -58,13 +58,6 @@ export default function PredictionScreen({ route, navigation }) {
         }),
       });
 
-      if (response.status === 403) {
-        // Free prediction already used → navigate to Premium screen
-        navigation.navigate("PremiumScreen");
-        setLoading(false);
-        return;
-      }
-
       const data = await response.json();
 
       if (response.ok) {
@@ -76,6 +69,9 @@ export default function PredictionScreen({ route, navigation }) {
           bttsPct: data.bttsPct,
           recentForm: data.recentForm
         });
+      } else if (response.status === 403) {
+        // Free user has already used prediction → redirect to PremiumScreen
+        navigation.navigate('PremiumScreen');
       } else {
         Alert.alert("Error", data.error || "Prediction failed");
       }
