@@ -1,31 +1,44 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Linking } from "react-native";
 import { API_URL } from "../../App";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function PremiumScreen({ navigation }) {
-  
+
   const openStripeCheckout = async (url) => {
     const supported = await Linking.canOpenURL(url);
     if (supported) {
       await Linking.openURL(url);
     }
+    // Do nothing if cannot open
   };
 
   const handlePayment = async () => {
     try {
-      console.log("🔍 FRONTEND: Calling backend:", `${API_URL}/stripe/payment`);
+      const token = await AsyncStorage.getItem("token");
+
+      if (!token) {
+        console.log("❌ No token found — user not logged in");
+        return;
+      }
+
+      console.log("🔍 Sending request to:", `${API_URL}/stripe/payment`);
 
       const response = await fetch(`${API_URL}/stripe/payment`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // ⬅️ Must include token
+        },
       });
 
       const data = await response.json();
-      console.log("🔍 FRONTEND stripe response:", data);
+      console.log("🔍 Stripe response:", data);
 
       if (data.url) {
         openStripeCheckout(data.url);
       }
+
     } catch (err) {
       console.log("⚠️ Payment error:", err);
     }
@@ -33,8 +46,7 @@ export default function PremiumScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-
-      {/* ✅ BACK BUTTON RESTORED */}
+      {/* Back button */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.navigate("Fixtures")}
@@ -55,36 +67,11 @@ export default function PremiumScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center", 
-    padding: 24, 
-    backgroundColor: "#e0e0e0" 
-  },
-  header: { 
-    fontSize: 28, 
-    fontWeight: "bold", 
-    marginBottom: 20, 
-    textAlign: "center" 
-  },
-  info: { 
-    fontSize: 16, 
-    marginBottom: 40, 
-    textAlign: "center", 
-    color: "#333" 
-  },
-  button: { 
-    backgroundColor: "#333", 
-    padding: 16, 
-    borderRadius: 8 
-  },
-  buttonText: { 
-    color: "#fff", 
-    fontSize: 16, 
-    fontWeight: "bold", 
-    textAlign: "center" 
-  },
+  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24, backgroundColor: "#e0e0e0" },
+  header: { fontSize: 28, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
+  info: { fontSize: 16, marginBottom: 40, textAlign: "center", color: "#333" },
+  button: { backgroundColor: "#333", padding: 16, borderRadius: 8 },
+  buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold", textAlign: "center" },
   backButton: {
     position: "absolute",
     top: 20,
@@ -95,9 +82,5 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     zIndex: 10,
   },
-  backText: { 
-    color: "#fff", 
-    fontWeight: "bold", 
-    fontSize: 14 
-  },
+  backText: { color: "#fff", fontWeight: "bold", fontSize: 14 },
 });
