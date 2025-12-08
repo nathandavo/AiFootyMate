@@ -142,7 +142,20 @@ export default function PredictionScreen({ route, navigation }) {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.versionText}>{isPremium ? "Premium" : "Free Version"}</Text>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.versionText}>{isPremium ? "Premium" : "Free Version"}</Text>
+
+          {/* NEW: Unlimited Predictions Button */}
+          {!isPremium && (
+            <TouchableOpacity
+              style={styles.unlimitedButton}
+              onPress={() => navigation.navigate('PremiumScreen')}
+            >
+              <Text style={styles.unlimitedButtonText}>Unlimited Predictions</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <View style={styles.matchBox}>
@@ -195,6 +208,9 @@ const styles = StyleSheet.create({
   backButton: { backgroundColor: "#555", paddingVertical: 4, paddingHorizontal: 10, borderRadius: 6 },
   backButtonText: { color: "white", fontSize: 12, fontWeight: "bold" },
   versionText: { fontSize: 12, fontWeight: "bold", color: "#333" },
+
+  unlimitedButton: { marginLeft: 10, backgroundColor: "#ff9900", paddingVertical: 4, paddingHorizontal: 8, borderRadius: 6 },
+  unlimitedButtonText: { color: "white", fontWeight: "bold", fontSize: 12 },
 
   matchBox: {
     width: "100%",
