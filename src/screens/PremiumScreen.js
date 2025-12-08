@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Linking } from "react-native";
-import { API_URL } from "../../App";
+import { API_URL } from "../../App"; // Make sure this points to your backend
 
 export default function PremiumScreen({ navigation }) {
 
@@ -14,8 +14,7 @@ export default function PremiumScreen({ navigation }) {
 
   const handlePayment = async () => {
     try {
-      // ✅ Updated endpoint to match your backend /stripe/payment route
-      const response = await fetch(`${API_URL}/stripe/payment`, {
+      const response = await fetch(`${API_URL}/payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
