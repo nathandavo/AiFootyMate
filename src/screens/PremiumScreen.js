@@ -1,3 +1,4 @@
+console.log("🔍 FRONTEND API URL:", API_URL);
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Linking } from "react-native";
 import { API_URL } from "../../App"; // Make sure this points to your backend
