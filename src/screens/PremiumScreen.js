@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Linking } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Linking } from "react-native";
 import { API_URL } from "../../App";
 
 export default function PremiumScreen({ navigation }) {
@@ -8,27 +8,25 @@ export default function PremiumScreen({ navigation }) {
     const supported = await Linking.canOpenURL(url);
     if (supported) {
       await Linking.openURL(url);
-    } else {
-      Alert.alert("Error", "Cannot open payment link");
-    }
+    } 
+    // Do nothing if cannot open, no alerts
   };
 
   const handlePayment = async () => {
     try {
-      const response = await fetch(`${API_URL}/stripe/checkout`, { // ✅ updated route
+      const response = await fetch(`${API_URL}/payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
       const data = await response.json();
 
       if (data.url) {
-        await openStripeCheckout(data.url);
-      } else {
-        Alert.alert("Error", "Failed to create payment session");
+        openStripeCheckout(data.url);
       }
+      // Do nothing if no URL, no alerts
     } catch (err) {
       console.log("Payment error:", err);
-      Alert.alert("Error", "Something went wrong with payment");
+      // Do nothing, no alerts
     }
   };
 
@@ -60,8 +58,6 @@ const styles = StyleSheet.create({
   info: { fontSize: 16, marginBottom: 40, textAlign: "center", color: "#333" },
   button: { backgroundColor: "#333", padding: 16, borderRadius: 8 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold", textAlign: "center" },
-
-  /* Back button style */
   backButton: {
     position: "absolute",
     top: 20,
