@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Linking } from "react-native";
 import { API_URL } from "../../App";
 
-export default function PremiumScreen({ navigation }) {
+export default function PremiumScreen({ navigation, userToken }) { // Pass userToken from your auth context
 
   const openStripeCheckout = async (url) => {
     const supported = await Linking.canOpenURL(url);
@@ -15,10 +15,14 @@ export default function PremiumScreen({ navigation }) {
 
   const handlePayment = async () => {
     try {
-      const response = await fetch(`${API_URL}/payment`, {
+      const response = await fetch(`${API_URL}/stripe/checkout`, { // 🔥 Corrected endpoint
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${userToken}`, // 🔥 Send token if your backend requires auth
+        },
       });
+
       const data = await response.json();
 
       if (data.url) {
