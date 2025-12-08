@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Linking } from "react-native";
 import { API_URL } from "../../App";
-import { getUserToken } from "../../utils/auth"; // assume you have a function to get the logged-in user's token
 
 export default function PremiumScreen({ navigation }) {
 
@@ -16,16 +15,11 @@ export default function PremiumScreen({ navigation }) {
 
   const handlePayment = async () => {
     try {
-      const token = await getUserToken(); // get the logged-in user's JWT
-      if (!token) return Alert.alert("Error", "You must be logged in");
-
-      const response = await fetch(`${API_URL}/stripe/checkout`, {
+      const response = await fetch(`${API_URL}/stripe/checkout`, { // hit your stripe checkout route
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
       });
+
       const data = await response.json();
 
       if (data.url) {
@@ -42,7 +36,6 @@ export default function PremiumScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Back button */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.navigate("Fixtures")}
@@ -69,7 +62,6 @@ const styles = StyleSheet.create({
   button: { backgroundColor: "#333", padding: 16, borderRadius: 8 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold", textAlign: "center" },
 
-  /* Back button style */
   backButton: {
     position: "absolute",
     top: 20,
