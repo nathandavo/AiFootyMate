@@ -17,7 +17,7 @@ function WelcomeScreen({ navigation }) {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
-        <Text style={styles.title}>🎯 Welcome to MyFootyAiMate!</Text>
+        <Text style={styles.title}>🎯 Welcome to MyAiFootyMate!</Text>
 
         <View style={styles.box}>
           <Text style={styles.bullet}>• Select Upcoming Matches 🏟️</Text>
