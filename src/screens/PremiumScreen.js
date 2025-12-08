@@ -1,8 +1,9 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Linking } from "react-native";
 import { API_URL } from "../../App";
+import { getUserToken } from "../../utils/auth"; // assume you have a function to get the logged-in user's token
 
-export default function PremiumScreen({ navigation, userToken }) { // Pass userToken from your auth context
+export default function PremiumScreen({ navigation }) {
 
   const openStripeCheckout = async (url) => {
     const supported = await Linking.canOpenURL(url);
@@ -15,19 +16,22 @@ export default function PremiumScreen({ navigation, userToken }) { // Pass userT
 
   const handlePayment = async () => {
     try {
-      const response = await fetch(`${API_URL}/stripe/checkout`, { // 🔥 Corrected endpoint
+      const token = await getUserToken(); // get the logged-in user's JWT
+      if (!token) return Alert.alert("Error", "You must be logged in");
+
+      const response = await fetch(`${API_URL}/stripe/checkout`, {
         method: "POST",
-        headers: {
+        headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${userToken}`, // 🔥 Send token if your backend requires auth
+          "Authorization": `Bearer ${token}`,
         },
       });
-
       const data = await response.json();
 
       if (data.url) {
         await openStripeCheckout(data.url);
       } else {
+        console.log("Stripe response:", data);
         Alert.alert("Error", "Failed to create payment session");
       }
     } catch (err) {
