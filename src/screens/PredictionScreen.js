@@ -33,7 +33,7 @@ export default function PredictionScreen({ route, navigation }) {
   }, []);
 
   // ----------------------------------------------------
-  // FIXED handlePredict — FREE USERS NAVIGATE TO PREMIUM SCREEN
+  // FIXED handlePredict — NO OTHER CHANGES ANYWHERE
   // ----------------------------------------------------
   const handlePredict = async () => {
     setLoading(true);
@@ -58,12 +58,17 @@ export default function PredictionScreen({ route, navigation }) {
         }),
       });
 
+      if (response.status === 403) {
+        // Free prediction already used → navigate to Premium screen
+        navigation.navigate("PremiumScreen");
+        setLoading(false);
+        return;
+      }
+
       const data = await response.json();
 
-      if (response.status === 403 && data.error === "Free prediction already used this week") {
-        // Navigate to Premium screen
-        navigation.navigate("PremiumScreen");
-      } else if (response.ok) {
+      if (response.ok) {
+        // FRONTEND NOW USES BACKEND VALUES DIRECTLY
         setPredictionData({
           score: data.score,
           reasoning: data.reasoning,
@@ -74,7 +79,6 @@ export default function PredictionScreen({ route, navigation }) {
       } else {
         Alert.alert("Error", data.error || "Prediction failed");
       }
-
     } catch (err) {
       console.log(err);
       Alert.alert("Error", "Cannot connect to backend");
