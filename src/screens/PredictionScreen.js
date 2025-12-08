@@ -33,7 +33,7 @@ export default function PredictionScreen({ route, navigation }) {
   }, []);
 
   // ----------------------------------------------------
-  // FIXED handlePredict — redirects free users to Premium
+  // FIXED handlePredict — preserves premium predictions
   // ----------------------------------------------------
   const handlePredict = async () => {
     setLoading(true);
@@ -61,7 +61,6 @@ export default function PredictionScreen({ route, navigation }) {
       const data = await response.json();
 
       if (response.ok) {
-        // FRONTEND NOW USES BACKEND VALUES DIRECTLY
         setPredictionData({
           score: data.score,
           reasoning: data.reasoning,
@@ -70,13 +69,28 @@ export default function PredictionScreen({ route, navigation }) {
           recentForm: data.recentForm
         });
       } else if (response.status === 403) {
-        // Free user has already used prediction → redirect to Premium screen
-        navigation.navigate('Premium'); // <-- FIXED
+        // Free user has already used prediction → redirect to PremiumScreen
+        navigation.navigate('Premium');
       } else {
+        // Only show dummy prediction if backend failed completely
+        setPredictionData({
+          score: 'N/A',
+          winChances: { home: 33, draw: 34, away: 33 },
+          bttsPct: 50,
+          reasoning: 'Prediction unavailable',
+          recentForm: { home: [], away: [] }
+        });
         Alert.alert("Error", data.error || "Prediction failed");
       }
     } catch (err) {
       console.log(err);
+      setPredictionData({
+        score: 'N/A',
+        winChances: { home: 33, draw: 34, away: 33 },
+        bttsPct: 50,
+        reasoning: 'Prediction unavailable',
+        recentForm: { home: [], away: [] }
+      });
       Alert.alert("Error", "Cannot connect to backend");
     } finally {
       setLoading(false);
