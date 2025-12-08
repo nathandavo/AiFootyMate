@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Linking } from "react-native";
-import { API_URL } from "../../App"; // make sure API_URL points to your backend
+import { API_URL } from "../../App";
 
 export default function PremiumScreen({ navigation }) {
 
@@ -8,13 +8,14 @@ export default function PremiumScreen({ navigation }) {
     const supported = await Linking.canOpenURL(url);
     if (supported) {
       await Linking.openURL(url);
-    }
-    // do nothing if not supported
+    } 
+    // Do nothing if cannot open, no alerts
   };
 
   const handlePayment = async () => {
     try {
-      const response = await fetch(`${API_URL}/stripe/payment`, { // ✅ /stripe/payment
+      // ✅ Updated endpoint to match your backend /stripe/payment route
+      const response = await fetch(`${API_URL}/stripe/payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
@@ -23,10 +24,10 @@ export default function PremiumScreen({ navigation }) {
       if (data.url) {
         openStripeCheckout(data.url);
       }
-      // do nothing if no URL
+      // Do nothing if no URL, no alerts
     } catch (err) {
       console.log("Payment error:", err);
-      // no alerts
+      // Do nothing, no alerts
     }
   };
 
@@ -42,7 +43,7 @@ export default function PremiumScreen({ navigation }) {
 
       <Text style={styles.header}>Upgrade to Premium</Text>
       <Text style={styles.info}>
-        Unlock premium features and get predictions for all matches.
+        Unlock premium feature and get predictions for all matches.
       </Text>
 
       <TouchableOpacity style={styles.button} onPress={handlePayment}>
@@ -53,36 +54,11 @@ export default function PremiumScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center", 
-    padding: 24, 
-    backgroundColor: "#e0e0e0" 
-  },
-  header: { 
-    fontSize: 28, 
-    fontWeight: "bold", 
-    marginBottom: 20, 
-    textAlign: "center" 
-  },
-  info: { 
-    fontSize: 16, 
-    marginBottom: 40, 
-    textAlign: "center", 
-    color: "#333" 
-  },
-  button: { 
-    backgroundColor: "#333", 
-    padding: 16, 
-    borderRadius: 8 
-  },
-  buttonText: { 
-    color: "#fff", 
-    fontSize: 16, 
-    fontWeight: "bold", 
-    textAlign: "center" 
-  },
+  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24, backgroundColor: "#e0e0e0" },
+  header: { fontSize: 28, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
+  info: { fontSize: 16, marginBottom: 40, textAlign: "center", color: "#333" },
+  button: { backgroundColor: "#333", padding: 16, borderRadius: 8 },
+  buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold", textAlign: "center" },
   backButton: {
     position: "absolute",
     top: 20,
@@ -93,9 +69,5 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     zIndex: 10,
   },
-  backText: { 
-    color: "#fff", 
-    fontWeight: "bold", 
-    fontSize: 14 
-  },
+  backText: { color: "#fff", fontWeight: "bold", fontSize: 14 },
 });
