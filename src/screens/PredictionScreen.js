@@ -7,7 +7,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function PredictionScreen({ route, navigation }) {
   const { fixture, date, token: passedToken, isPremium: passedIsPremium } = route.params || {};
   const [predictionData, setPredictionData] = useState(null);
-  2;
   const [loading, setLoading] = useState(false);
   const [isPremium, setIsPremium] = useState(passedIsPremium ?? false);
 
@@ -34,7 +33,7 @@ export default function PredictionScreen({ route, navigation }) {
   }, []);
 
   // ----------------------------------------------------
-  // FIXED handlePredict — NO OTHER CHANGES ANYWHERE
+  // FIXED handlePredict — FREE USERS NAVIGATE TO PREMIUM SCREEN
   // ----------------------------------------------------
   const handlePredict = async () => {
     setLoading(true);
@@ -60,8 +59,11 @@ export default function PredictionScreen({ route, navigation }) {
       });
 
       const data = await response.json();
-      if (response.ok) {
-        // FRONTEND NOW USES BACKEND VALUES DIRECTLY
+
+      if (response.status === 403 && data.error === "Free prediction already used this week") {
+        // Navigate to Premium screen
+        navigation.navigate("PremiumScreen");
+      } else if (response.ok) {
         setPredictionData({
           score: data.score,
           reasoning: data.reasoning,
@@ -72,6 +74,7 @@ export default function PredictionScreen({ route, navigation }) {
       } else {
         Alert.alert("Error", data.error || "Prediction failed");
       }
+
     } catch (err) {
       console.log(err);
       Alert.alert("Error", "Cannot connect to backend");
