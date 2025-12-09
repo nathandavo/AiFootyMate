@@ -42,6 +42,30 @@ export default function AccountScreen({ navigation, route }) {
     loadUser();
   }, []);
 
+  const openBillingPortal = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+
+      const res = await fetch(`${API_URL}/stripe/portal`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (data.url) {
+        // Open Stripe portal in browser
+        Linking.openURL(data.url);
+      } else {
+        Alert.alert("Error", "Unable to open billing portal.");
+      }
+    } catch (err) {
+      Alert.alert("Error", "Could not open portal.");
+    }
+  };
+
   const logout = async () => {
     await AsyncStorage.removeItem("userToken");
     Alert.alert("Logged Out", "You have been logged out.");
@@ -54,10 +78,9 @@ export default function AccountScreen({ navigation, route }) {
   return (
     <View style={styles.container}>
       
-      {/* Back Button - ONLY CHANGE MADE */}
       <TouchableOpacity 
         style={styles.backButton}
-        onPress={() => navigation.navigate("Fixtures")}  // This one is actually SAFE here
+        onPress={() => navigation.navigate("Fixtures")}
       >
         <Text style={styles.backText}>Back</Text>
       </TouchableOpacity>
@@ -81,6 +104,15 @@ export default function AccountScreen({ navigation, route }) {
           onPress={() => navigation.navigate("Premium")}
         >
           <Text style={styles.upgradeText}>Upgrade to Premium</Text>
+        </TouchableOpacity>
+      )}
+
+      {isPremium && (
+        <TouchableOpacity 
+          style={styles.upgradeButton}
+          onPress={openBillingPortal}
+        >
+          <Text style={styles.upgradeText}>Manage Subscription</Text>
         </TouchableOpacity>
       )}
 
@@ -109,6 +141,7 @@ const styles = StyleSheet.create({
 
   header: { fontSize: 28, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
   emailText: { fontSize: 17, textAlign: "center", marginBottom: 10, color: "#333" },
+
   box: {
     padding: 20,
     backgroundColor: "#fff",
@@ -117,8 +150,10 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     marginBottom: 20,
   },
+
   label: { fontSize: 16, fontWeight: "bold", color: "#555" },
   value: { marginTop: 6, fontSize: 18, fontWeight: "bold", color: "#222" },
+
   upgradeButton: {
     backgroundColor: "#333",
     padding: 12,
@@ -131,6 +166,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+
   logoutButton: {
     backgroundColor: "#b30000",
     padding: 12,
