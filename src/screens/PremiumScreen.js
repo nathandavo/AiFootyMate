@@ -56,7 +56,7 @@ export default function PremiumScreen({ navigation }) {
 
       <Text style={styles.header}>Upgrade to Premium</Text>
       <Text style={styles.info}>
-        Unlock premium features and get predictions for all matches. (Thats just 15p a game!)
+        Unlock premium features and get predictions for all matches. (Thats just 30p a game!)
       </Text>
 
       <TouchableOpacity style={styles.button} onPress={handlePayment}>
