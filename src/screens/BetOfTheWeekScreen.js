@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert, SafeAreaView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "../../App";
 
@@ -12,9 +12,14 @@ export default function BetOfTheWeekScreen() {
     setBet(null);
 
     const token = await AsyncStorage.getItem("userToken");
+    if (!token) {
+      Alert.alert("Login Required", "Please log in to generate the Bet Of The Week.");
+      setLoading(false);
+      return;
+    }
 
     try {
-      const fixturesRes = await fetch(`${API_URL}/fixtures/upcoming`); 
+      const fixturesRes = await fetch(`${API_URL}/fixtures/upcoming`);
       const fixturesData = await fixturesRes.json();
 
       const res = await fetch(`${API_URL}/bet/weekly`, {
@@ -29,38 +34,41 @@ export default function BetOfTheWeekScreen() {
       const data = await res.json();
       setBet(data);
     } catch (err) {
-      Alert.alert("Error", "Failed to generate bet");
+      console.log("Error fetching Bet Of The Week:", err);
+      Alert.alert("Error", "Failed to generate bet. Please try again.");
     }
 
     setLoading(false);
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>Bet Of The Week</Text>
+    <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView style={styles.container}>
+        <Text style={styles.header}>Bet Of The Week</Text>
 
-      <TouchableOpacity style={styles.btn} onPress={generateBet}>
-        <Text style={styles.btnText}>Generate Best Bet</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.btn} onPress={generateBet}>
+          <Text style={styles.btnText}>Generate Best Bet</Text>
+        </TouchableOpacity>
 
-      {loading && <ActivityIndicator size="large" />}
+        {loading && <ActivityIndicator size="large" />}
 
-      {bet && (
-        <View style={styles.box}>
-          <Text style={styles.title}>
-            {bet.fixture.home} vs {bet.fixture.away}
-          </Text>
+        {bet && (
+          <View style={styles.box}>
+            <Text style={styles.title}>
+              {bet?.fixture?.home} vs {bet?.fixture?.away}
+            </Text>
 
-          <Text style={styles.line}>Score Prediction: {bet.score}</Text>
-          <Text style={styles.line}>BTTS Chance: {bet.bttsPct}%</Text>
+            <Text style={styles.line}>Score Prediction: {bet?.score ?? "N/A"}</Text>
+            <Text style={styles.line}>BTTS Chance: {bet?.bttsPct ?? 0}%</Text>
 
-          <Text style={styles.subTitle}>Win Chances:</Text>
-          <Text>Home: {bet.winChances.home}%</Text>
-          <Text>Draw: {bet.winChances.draw}%</Text>
-          <Text>Away: {bet.winChances.away}%</Text>
-        </View>
-      )}
-    </ScrollView>
+            <Text style={styles.subTitle}>Win Chances:</Text>
+            <Text>Home: {bet?.winChances?.home ?? 0}%</Text>
+            <Text>Draw: {bet?.winChances?.draw ?? 0}%</Text>
+            <Text>Away: {bet?.winChances?.away ?? 0}%</Text>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
