@@ -111,39 +111,6 @@ export default function FixturesScreen({ navigation }) {
         </Text>
       </TouchableOpacity>
 
-      {/* BET OF THE WEEK BUTTON */}
-      <TouchableOpacity
-        style={{
-          backgroundColor: "#000",
-          padding: 12,
-          borderRadius: 10,
-          marginBottom: 15,
-          marginTop: 50, // ensures it doesn’t overlap with loginButton
-        }}
-        onPress={async () => {
-          const savedToken = await AsyncStorage.getItem("userToken");
-          if (!savedToken) return navigation.navigate("Premium");
-
-          const res = await fetch(`${API_URL}/auth/me`, {
-            headers: { Authorization: `Bearer ${savedToken}` },
-          });
-          const data = await res.json();
-
-          const premiumStatus =
-            data?.isPremium ?? data?.user?.isPremium ?? data?.data?.isPremium ?? false;
-
-          if (premiumStatus) {
-            navigation.navigate("BetOfTheWeek");
-          } else {
-            navigation.navigate("Premium");
-          }
-        }}
-      >
-        <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold", textAlign: "center" }}>
-          Bet Of The Week
-        </Text>
-      </TouchableOpacity>
-
       <FlatList
         data={fixtures}
         keyExtractor={(item) => item.fixture.id.toString()}
