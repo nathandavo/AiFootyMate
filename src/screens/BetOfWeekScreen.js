@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "../../App";
 
@@ -20,7 +20,6 @@ export default function BetOfWeekScreen({ navigation }) {
           return;
         }
 
-        // ✅ Corrected endpoint
         const res = await fetch(`${API_URL}/bet-of-the-week`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -33,6 +32,7 @@ export default function BetOfWeekScreen({ navigation }) {
         }
 
         const data = await res.json();
+        console.log("Bet data fetched:", data); // <-- Debugging
         setBet(data);
       } catch (err) {
         console.error("Fetch failed:", err);
@@ -53,33 +53,35 @@ export default function BetOfWeekScreen({ navigation }) {
     return <Text style={{ marginTop: 60, textAlign: "center", color: "red" }}>{error}</Text>;
   }
 
-  if (!bet) {
+  if (!bet || !bet.picks || !Array.isArray(bet.picks) || bet.picks.length === 0) {
     return <Text style={{ marginTop: 60, textAlign: "center" }}>No bet available.</Text>;
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
         <Text style={styles.backText}>← Back</Text>
       </TouchableOpacity>
 
       <Text style={styles.title}>🔥 Bet of the Week</Text>
-      <Text style={styles.gw}>{bet.gameweek}</Text>
+      <Text style={styles.gw}>{bet.gameweek || "GW?"}</Text>
 
       {bet.picks.map((pick, i) => (
         <View key={i} style={styles.card}>
-          <Text style={styles.market}>{pick.market}</Text>
-          <Text style={styles.match}>{pick.match}</Text>
-          <Text style={styles.selection}>{pick.selection}</Text>
-          <Text style={styles.confidence}>Confidence: {pick.confidence}%</Text>
+          <Text style={styles.market}>{pick.market || "Market N/A"}</Text>
+          <Text style={styles.match}>{pick.match || "Match N/A"}</Text>
+          <Text style={styles.selection}>{pick.selection || "Selection N/A"}</Text>
+          <Text style={styles.confidence}>
+            Confidence: {pick.confidence !== undefined ? pick.confidence + "%" : "N/A"}
+          </Text>
         </View>
       ))}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#e0e0e0" },
+  container: { flexGrow: 1, padding: 20, backgroundColor: "#e0e0e0" },
   back: { marginBottom: 10 },
   backText: { fontSize: 18, fontWeight: "bold" },
   title: { fontSize: 28, fontWeight: "bold", textAlign: "center", marginBottom: 6 },
