@@ -129,7 +129,7 @@ export default function FixturesScreen({ navigation }) {
         </Text>
         <View style={styles.button}>
           <Text style={styles.buttonText}>
-            {isPremium ? "View Bet" : "Upgrade to Premium"}
+            {isPremium ? "View Pick" : "Upgrade to Premium"}
           </Text>
         </View>
       </TouchableOpacity>
@@ -154,5 +154,6 @@ const styles = StyleSheet.create({
   loginButton: { position: "absolute", top: 16, right: 16, backgroundColor: "#555", paddingVertical: 6, paddingHorizontal: 12, borderRadius: 6, zIndex: 1 },
   loginButtonText: { color: "white", fontSize: 12, fontWeight: "bold" },
 });
+
 
 
