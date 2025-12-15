@@ -59,7 +59,8 @@ export default function BetOfWeekScreen({ navigation }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+      {/* ✅ Back button to go to Fixtures screen */}
+      <TouchableOpacity style={styles.back} onPress={() => navigation.navigate("Fixtures")}>
         <Text style={styles.backText}>← Back</Text>
       </TouchableOpacity>
 
