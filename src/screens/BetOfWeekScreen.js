@@ -6,18 +6,37 @@ import { API_URL } from "../../App";
 export default function BetOfWeekScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [bet, setBet] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const loadBet = async () => {
-      const token = await AsyncStorage.getItem("userToken");
+      try {
+        const token = await AsyncStorage.getItem("userToken");
+        if (!token) {
+          setError("User token missing. Please log in again.");
+          setLoading(false);
+          return;
+        }
 
-      const res = await fetch(`${API_URL}/bet-of-the-week`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        const res = await fetch(`${API_URL}/api/bet-of-week`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      const data = await res.json();
-      setBet(data);
-      setLoading(false);
+        if (!res.ok) {
+          const errData = await res.json();
+          setError(errData.error || "Failed to fetch Bet of the Week");
+          setLoading(false);
+          return;
+        }
+
+        const data = await res.json();
+        setBet(data);
+      } catch (err) {
+        console.error("Fetch failed:", err);
+        setError("Network error. Please try again.");
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadBet();
@@ -25,6 +44,10 @@ export default function BetOfWeekScreen({ navigation }) {
 
   if (loading) {
     return <ActivityIndicator size="large" style={{ marginTop: 60 }} />;
+  }
+
+  if (error) {
+    return <Text style={{ marginTop: 60, textAlign: "center", color: "red" }}>{error}</Text>;
   }
 
   return (
