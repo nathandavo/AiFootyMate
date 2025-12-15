@@ -74,12 +74,12 @@ export default function FixturesScreen({ navigation }) {
     });
   };
 
-  // ✅ ADDED: Bet of the Week handler (nothing else changed)
+  // ✅ FIXED: Correct navigation name
   const handleBetOfTheWeek = () => {
     if (!token || !isPremium) {
       navigation.navigate("Premium");
     } else {
-      navigation.navigate("BetOfTheWeek");
+      navigation.navigate("BetOfWeek"); // <-- Fixed
     }
   };
 
@@ -119,7 +119,7 @@ export default function FixturesScreen({ navigation }) {
         </Text>
       </TouchableOpacity>
 
-      {/* ✅ ADDED: Bet Of The Week card (styled same as fixtures) */}
+      {/* ✅ ADDED: Bet Of The Week card */}
       <TouchableOpacity style={styles.matchBox} onPress={handleBetOfTheWeek}>
         <Text style={styles.matchText}>🔥 Bet Of The Week</Text>
         <Text style={styles.dateText}>
