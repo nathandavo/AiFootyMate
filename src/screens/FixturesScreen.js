@@ -124,8 +124,8 @@ export default function FixturesScreen({ navigation }) {
         <Text style={styles.matchText}>🔥 Ai Pick of the week 🔥</Text>
         <Text style={styles.dateText}>
           {isPremium
-            ? "AI-selected strongest bets this gameweek"
-            : "Premium feature – unlock the best bets"}
+            ? "AI-selected strongest analysis this gameweek"
+            : "Premium feature – unlock the best analysis"}
         </Text>
         <View style={styles.button}>
           <Text style={styles.buttonText}>
@@ -154,4 +154,5 @@ const styles = StyleSheet.create({
   loginButton: { position: "absolute", top: 16, right: 16, backgroundColor: "#555", paddingVertical: 6, paddingHorizontal: 12, borderRadius: 6, zIndex: 1 },
   loginButtonText: { color: "white", fontSize: 12, fontWeight: "bold" },
 });
+
 
