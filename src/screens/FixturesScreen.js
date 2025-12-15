@@ -33,7 +33,6 @@ export default function FixturesScreen({ navigation }) {
           });
           const userData = await res.json();
 
-          // FIX: detect premium correctly regardless of backend format
           const premiumStatus =
             userData?.isPremium ??
             userData?.user?.isPremium ??
@@ -75,6 +74,15 @@ export default function FixturesScreen({ navigation }) {
     });
   };
 
+  // ✅ ADDED: Bet of the Week handler (nothing else changed)
+  const handleBetOfTheWeek = () => {
+    if (!token || !isPremium) {
+      navigation.navigate("Premium");
+    } else {
+      navigation.navigate("BetOfTheWeek");
+    }
+  };
+
   const renderItem = ({ item }) => {
     const matchDate = new Date(item.fixture.date).toLocaleString();
     return (
@@ -94,13 +102,13 @@ export default function FixturesScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      
-      {/* FIXED BUTTON — navigate to Account or Login */}
+
+      {/* EXISTING LOGIN BUTTON — UNCHANGED */}
       <TouchableOpacity
         style={styles.loginButton}
         onPress={() => {
           if (token) {
-            navigation.navigate("Account"); // no more isPremium param
+            navigation.navigate("Account");
           } else {
             navigation.navigate("Login");
           }
@@ -109,6 +117,21 @@ export default function FixturesScreen({ navigation }) {
         <Text style={styles.loginButtonText}>
           {token ? (isPremium ? "Premium" : "Free Version") : "Login/Register"}
         </Text>
+      </TouchableOpacity>
+
+      {/* ✅ ADDED: Bet Of The Week card (styled same as fixtures) */}
+      <TouchableOpacity style={styles.matchBox} onPress={handleBetOfTheWeek}>
+        <Text style={styles.matchText}>🔥 Bet Of The Week</Text>
+        <Text style={styles.dateText}>
+          {isPremium
+            ? "AI-selected strongest bets this gameweek"
+            : "Premium feature – unlock the best bets"}
+        </Text>
+        <View style={styles.button}>
+          <Text style={styles.buttonText}>
+            {isPremium ? "View Bet" : "Upgrade to Premium"}
+          </Text>
+        </View>
       </TouchableOpacity>
 
       <FlatList
