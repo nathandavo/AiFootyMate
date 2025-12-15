@@ -64,7 +64,7 @@ export default function BetOfWeekScreen({ navigation }) {
         <Text style={styles.backText}>← Back</Text>
       </TouchableOpacity>
 
-      <Text style={styles.title}>🔥 Bet of the Week</Text>
+      <Text style={styles.title}>🔥 Ai Pick of the week</Text>
 
       {bet.picks.map((pick, i) => (
         <View key={i} style={styles.card}>
