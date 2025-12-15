@@ -71,6 +71,7 @@ export default function App() {
         <Stack.Screen name="Prediction" component={PredictionScreen} />
         <Stack.Screen name="Account" component={AccountScreen} />
         <Stack.Screen name="Premium" component={PremiumScreen} />
+        <Stack.Screen name="BetOfWeek" component={BetOfWeekScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
