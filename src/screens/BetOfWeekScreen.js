@@ -20,7 +20,7 @@ export default function BetOfWeekScreen({ navigation }) {
           return;
         }
 
-        // ✅ Fixed URL to match backend route
+        // ✅ Corrected endpoint
         const res = await fetch(`${API_URL}/bet-of-the-week`, {
           headers: { Authorization: `Bearer ${token}` },
         });
