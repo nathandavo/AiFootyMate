@@ -10,6 +10,8 @@ export default function BetOfWeekScreen({ navigation }) {
 
   useEffect(() => {
     const loadBet = async () => {
+      setLoading(true);
+      setError(null);
       try {
         const token = await AsyncStorage.getItem("userToken");
         if (!token) {
@@ -48,6 +50,10 @@ export default function BetOfWeekScreen({ navigation }) {
 
   if (error) {
     return <Text style={{ marginTop: 60, textAlign: "center", color: "red" }}>{error}</Text>;
+  }
+
+  if (!bet) {
+    return <Text style={{ marginTop: 60, textAlign: "center" }}>No bet available.</Text>;
   }
 
   return (
