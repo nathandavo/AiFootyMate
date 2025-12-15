@@ -121,7 +121,7 @@ export default function FixturesScreen({ navigation }) {
 
       {/* ✅ ADDED: Bet Of The Week card */}
       <TouchableOpacity style={styles.matchBox} onPress={handleBetOfTheWeek}>
-        <Text style={styles.matchText}>🔥 Bet Of The Week</Text>
+        <Text style={styles.matchText}>🔥 Ai Pick of the week 🔥</Text>
         <Text style={styles.dateText}>
           {isPremium
             ? "AI-selected strongest bets this gameweek"
@@ -154,3 +154,4 @@ const styles = StyleSheet.create({
   loginButton: { position: "absolute", top: 16, right: 16, backgroundColor: "#555", paddingVertical: 6, paddingHorizontal: 12, borderRadius: 6, zIndex: 1 },
   loginButtonText: { color: "white", fontSize: 12, fontWeight: "bold" },
 });
+
