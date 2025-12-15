@@ -54,6 +54,13 @@ export default function PremiumScreen({ navigation }) {
         <Text style={styles.backText}>← Back</Text>
       </TouchableOpacity>
 
+      {/* ⚠️ Warning message */}
+      <View style={styles.warningBox}>
+        <Text style={styles.warningText}>
+          ‼️‼️ You must open this in a browser in order to allow payment ‼️‼️
+        </Text>
+      </View>
+
       <Text style={styles.header}>Upgrade to Premium</Text>
       <Text style={styles.info}>
         Unlock premium features and get predictions for all matches. (Thats just 30p a game!)
@@ -83,4 +90,21 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   backText: { color: "#fff", fontWeight: "bold", fontSize: 14 },
+
+  // ⚠️ Warning styles
+  warningBox: {
+    backgroundColor: "#fff3cd",
+    borderLeftWidth: 4,
+    borderLeftColor: "#ffcc00",
+    padding: 12,
+    marginBottom: 16,
+    borderRadius: 8,
+    width: "100%",
+  },
+  warningText: {
+    color: "#856404",
+    fontWeight: "600",
+    fontSize: 14,
+    textAlign: "center",
+  },
 });
