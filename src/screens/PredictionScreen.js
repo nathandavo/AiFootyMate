@@ -32,9 +32,6 @@ export default function PredictionScreen({ route, navigation }) {
     fetchPremium();
   }, []);
 
-  // ----------------------------------------------------
-  // handlePredict — redirect free users to PremiumScreen if they already used their free prediction
-  // ----------------------------------------------------
   const handlePredict = async () => {
     setLoading(true);
     try {
@@ -60,13 +57,8 @@ export default function PredictionScreen({ route, navigation }) {
 
       const data = await response.json();
 
-      // ⚡ Redirect free users who already used their free prediction
-      if (data.error && data.error.toLowerCase().includes("free prediction")) {
-        navigation.navigate('PremiumScreen'); // ← goes to PremiumScreen
-        return; // stop further execution
-      }
-
-      if (response.ok && !data.error) {
+      if (response.ok) {
+        // Got prediction
         setPredictionData({
           score: data.score,
           reasoning: data.reasoning,
@@ -75,17 +67,16 @@ export default function PredictionScreen({ route, navigation }) {
           recentForm: data.recentForm
         });
       } else {
-        Alert.alert("Error", data.error || "Prediction failed");
+        // Redirect free users who already used their prediction
+        navigation.navigate('PremiumScreen'); 
       }
-
     } catch (err) {
       console.log(err);
-      Alert.alert("Error", "Cannot connect to backend");
+      navigation.navigate('PremiumScreen'); // Just in case any error occurs, send to Premium
     } finally {
       setLoading(false);
     }
   };
-  // ----------------------------------------------------
 
   const renderFormDots = (form) =>
     (form || []).map((f, i) => {
@@ -105,7 +96,6 @@ export default function PredictionScreen({ route, navigation }) {
     if (sum !== totalSquares) {
       const diff = totalSquares - sum;
       a = Math.max(0, a + diff);
-      sum = h + d + a;
     }
 
     const squares = [];
