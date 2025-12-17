@@ -33,7 +33,7 @@ export default function PredictionScreen({ route, navigation }) {
   }, []);
 
   // ----------------------------------------------------
-  // FIXED handlePredict — preserves premium predictions
+  // handlePredict — redirect free users to PremiumScreen if they already used their free prediction
   // ----------------------------------------------------
   const handlePredict = async () => {
     setLoading(true);
@@ -60,7 +60,13 @@ export default function PredictionScreen({ route, navigation }) {
 
       const data = await response.json();
 
-      if (response.ok) {
+      // ⚡ Redirect free users who already used their free prediction
+      if (data.error && data.error.toLowerCase().includes("free prediction")) {
+        navigation.navigate('PremiumScreen'); // ← goes to PremiumScreen
+        return; // stop further execution
+      }
+
+      if (response.ok && !data.error) {
         setPredictionData({
           score: data.score,
           reasoning: data.reasoning,
@@ -68,29 +74,12 @@ export default function PredictionScreen({ route, navigation }) {
           bttsPct: data.bttsPct,
           recentForm: data.recentForm
         });
-      } else if (response.status === 403) {
-        // Free user has already used prediction → redirect to PremiumScreen
-        navigation.navigate('PremiumScreen'); // ✅ changed from "Premium"
       } else {
-        // Only show dummy prediction if backend failed completely
-        setPredictionData({
-          score: 'N/A',
-          winChances: { home: 33, draw: 34, away: 33 },
-          bttsPct: 50,
-          reasoning: 'Prediction unavailable',
-          recentForm: { home: [], away: [] }
-        });
         Alert.alert("Error", data.error || "Prediction failed");
       }
+
     } catch (err) {
       console.log(err);
-      setPredictionData({
-        score: 'N/A',
-        winChances: { home: 33, draw: 34, away: 33 },
-        bttsPct: 50,
-        reasoning: 'Prediction unavailable',
-        recentForm: { home: [], away: [] }
-      });
       Alert.alert("Error", "Cannot connect to backend");
     } finally {
       setLoading(false);
