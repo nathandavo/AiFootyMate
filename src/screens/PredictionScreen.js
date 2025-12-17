@@ -4,69 +4,36 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } fr
 import { API_URL } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-/* 🔹 FRONTEND GAMEWEEK HELPER (NO BACKEND CHANGE) */
-const getCurrentGW = () => {
-  const seasonStart = new Date("2025-08-01");
-  const today = new Date();
-  const diff = Math.floor((today - seasonStart) / (1000 * 60 * 60 * 24));
-  const gw = Math.max(1, Math.min(38, Math.ceil(diff / 7)));
-  return `GW${gw}`;
-};
-
 export default function PredictionScreen({ route, navigation }) {
   const { fixture, date, token: passedToken, isPremium: passedIsPremium } = route.params || {};
-
   const [predictionData, setPredictionData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isPremium, setIsPremium] = useState(passedIsPremium ?? false);
-  const [usedFreeThisWeek, setUsedFreeThisWeek] = useState(false);
 
-  /* 🔹 LOAD USER + FREE PICK STATUS */
   useEffect(() => {
-    const loadUserStatus = async () => {
-      const token = passedToken || (await AsyncStorage.getItem("userToken"));
-      if (!token) return;
-
+    const fetchPremium = async () => {
+      if (typeof passedIsPremium !== "undefined") {
+        setIsPremium(passedIsPremium);
+        return;
+      }
+      const t = passedToken || (await AsyncStorage.getItem("userToken"));
+      if (!t) return;
       try {
         const res = await fetch(`${API_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${t}` },
         });
-
-        const data = await res.json();
-
-        const premiumStatus =
-          data?.isPremium ??
-          data?.user?.isPremium ??
-          data?.data?.isPremium ??
-          false;
-
+        const d = await res.json();
+        const premiumStatus = d?.isPremium ?? d?.user?.isPremium ?? d?.data?.isPremium ?? false;
         setIsPremium(premiumStatus);
-
-        const gw = getCurrentGW();
-        const used =
-          data?.freePredictions?.[gw] ??
-          data?.user?.freePredictions?.[gw] ??
-          false;
-
-        setUsedFreeThisWeek(Boolean(used));
       } catch (err) {
-        console.log("Error loading user status:", err);
+        console.log("Error checking premium:", err);
       }
     };
-
-    loadUserStatus();
+    fetchPremium();
   }, []);
 
-  /* 🔹 PREDICT HANDLER */
   const handlePredict = async () => {
-    // 🚫 BLOCK FREE USERS BEFORE BACKEND
-    if (!isPremium && usedFreeThisWeek) {
-      navigation.navigate("Premium");
-      return;
-    }
-
     setLoading(true);
-
     try {
       const token = passedToken || (await AsyncStorage.getItem("userToken"));
       if (!token) {
@@ -90,28 +57,44 @@ export default function PredictionScreen({ route, navigation }) {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (response.ok) {
+        setPredictionData({
+          score: data.score,
+          reasoning: data.reasoning,
+          winChances: data.winChances,
+          bttsPct: data.bttsPct,
+          recentForm: data.recentForm,
+        });
+      } else if (response.status === 403) {
+        // Free user already used weekly pick → go to Premium
+        navigation.navigate("Premium"); // MUST match App.js Stack.Screen name
+        return; // stop execution so N/A isn’t set
+      } else {
+        // Backend failed completely → show dummy prediction
+        setPredictionData({
+          score: "N/A",
+          winChances: { home: 33, draw: 34, away: 33 },
+          bttsPct: 50,
+          reasoning: "Prediction unavailable",
+          recentForm: { home: [], away: [] },
+        });
         Alert.alert("Error", data.error || "Prediction failed");
-        setLoading(false);
-        return;
       }
-
-      setPredictionData({
-        score: data.score,
-        reasoning: data.reasoning,
-        winChances: data.winChances,
-        bttsPct: data.bttsPct,
-        recentForm: data.recentForm,
-      });
     } catch (err) {
       console.log(err);
+      setPredictionData({
+        score: "N/A",
+        winChances: { home: 33, draw: 34, away: 33 },
+        bttsPct: 50,
+        reasoning: "Prediction unavailable",
+        recentForm: { home: [], away: [] },
+      });
       Alert.alert("Error", "Cannot connect to backend");
     } finally {
       setLoading(false);
     }
   };
 
-  /* 🔹 UI HELPERS */
   const renderFormDots = (form) =>
     (form || []).map((f, i) => {
       let color = "#ccc";
@@ -121,23 +104,49 @@ export default function PredictionScreen({ route, navigation }) {
       return <View key={i} style={[styles.dot, { backgroundColor: color }]} />;
     });
 
-  const renderBttsBar = (pct) => {
-    const total = 10;
-    const yes = Math.round((pct / 100) * total);
-    const no = total - yes;
+  const renderWinBarSingle = (winChances) => {
+    const totalSquares = 10;
+    const h = Math.round((winChances.home / 100) * totalSquares);
+    const d = Math.round((winChances.draw / 100) * totalSquares);
+    let a = Math.round((winChances.away / 100) * totalSquares);
+    let sum = h + d + a;
+    if (sum !== totalSquares) {
+      const diff = totalSquares - sum;
+      a = Math.max(0, a + diff);
+      sum = h + d + a;
+    }
+
+    const squares = [];
+    for (let i = 0; i < h; i++) squares.push({ color: "#4CAF50" });
+    for (let i = 0; i < d; i++) squares.push({ color: "#FFC107" });
+    for (let i = 0; i < a; i++) squares.push({ color: "#F44336" });
+    while (squares.length < totalSquares) squares.push({ color: "#ccc" });
+
     return (
       <View style={styles.barRow}>
-        {[...Array(yes)].map((_, i) => (
-          <View key={`y${i}`} style={[styles.barSquare, { backgroundColor: "#4CAF50" }]} />
-        ))}
-        {[...Array(no)].map((_, i) => (
-          <View key={`n${i}`} style={[styles.barSquare, { backgroundColor: "#F44336" }]} />
+        {squares.map((s, i) => (
+          <View key={i} style={[styles.barSquare, { backgroundColor: s.color }]} />
         ))}
       </View>
     );
   };
 
-  /* 🔹 RENDER */
+  const renderBttsBar = (bttsPct) => {
+    const total = 10;
+    const yesCount = Math.round((bttsPct / 100) * total);
+    const noCount = total - yesCount;
+    const squares = [];
+    for (let i = 0; i < yesCount; i++) squares.push({ color: "#4CAF50" });
+    for (let i = 0; i < noCount; i++) squares.push({ color: "#F44336" });
+    return (
+      <View style={styles.barRow}>
+        {squares.map((s, i) => (
+          <View key={i} style={[styles.barSquare, { backgroundColor: s.color }]} />
+        ))}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
@@ -163,21 +172,27 @@ export default function PredictionScreen({ route, navigation }) {
           <Text style={styles.sectionTitle}>Score Prediction</Text>
           <Text style={styles.predictionText}>{predictionData.score}</Text>
 
-          <Text style={styles.sectionTitle}>Both Teams To Score</Text>
+          <Text style={styles.sectionTitle}>Win Probability</Text>
+          {renderWinBarSingle(predictionData.winChances)}
+          <Text style={styles.percentLine}>
+            {fixture.home.name}: {predictionData.winChances.home}%  ·  Draw: {predictionData.winChances.draw}%  ·  {fixture.away.name}: {predictionData.winChances.away}%
+          </Text>
+
+          <Text style={[styles.sectionTitle, { marginTop: 12 }]}>Both Teams To Score</Text>
           {renderBttsBar(predictionData.bttsPct)}
           <Text style={styles.percentLine}>BTTS: {predictionData.bttsPct}%</Text>
 
-          <Text style={styles.sectionTitle}>Recent Form</Text>
+          <Text style={styles.sectionTitle}>Recent Form (Last 5 Matches)</Text>
           <View style={styles.formRow}>
-            <Text style={styles.formLabel}>{fixture.home.name}</Text>
+            <Text style={styles.formLabel}>{fixture.home.name}:</Text>
             <View style={styles.dotsRow}>{renderFormDots(predictionData.recentForm.home)}</View>
           </View>
           <View style={styles.formRow}>
-            <Text style={styles.formLabel}>{fixture.away.name}</Text>
+            <Text style={styles.formLabel}>{fixture.away.name}:</Text>
             <View style={styles.dotsRow}>{renderFormDots(predictionData.recentForm.away)}</View>
           </View>
 
-          <Text style={styles.sectionTitle}>AI Analysis</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 12 }]}>AI Analysis</Text>
           <Text style={styles.predictionText}>{predictionData.reasoning}</Text>
         </View>
       )}
@@ -185,32 +200,51 @@ export default function PredictionScreen({ route, navigation }) {
   );
 }
 
-/* 🔹 STYLES (UNCHANGED) */
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#e0e0e0", alignItems: "center" },
-  topBar: { width: "100%", flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
-  backButton: { backgroundColor: "#555", padding: 6, borderRadius: 6 },
+  topBar: { width: "100%", flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  backButton: { backgroundColor: "#555", paddingVertical: 4, paddingHorizontal: 10, borderRadius: 6 },
   backButtonText: { color: "white", fontSize: 12, fontWeight: "bold" },
-  versionText: { fontSize: 12, fontWeight: "bold" },
+  versionText: { fontSize: 12, fontWeight: "bold", color: "#333" },
 
-  matchBox: { width: "100%", backgroundColor: "#f0f0f0", padding: 16, borderRadius: 8, marginBottom: 16 },
-  matchText: { fontWeight: "bold", fontSize: 18 },
-  dateText: { color: "#555" },
+  matchBox: {
+    width: "100%",
+    backgroundColor: "#f0f0f0",
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#999",
+    marginBottom: 16,
+    alignItems: "center",
+  },
+  matchText: { fontWeight: "bold", fontSize: 18, color: "#333" },
+  dateText: { marginTop: 4, fontSize: 14, color: "#555" },
+  button: {
+    backgroundColor: "#333",
+    padding: 14,
+    borderRadius: 8,
+    width: "100%",
+    marginBottom: 16,
+  },
+  buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
 
-  button: { backgroundColor: "#333", padding: 14, borderRadius: 8, width: "100%" },
-  buttonText: { color: "white", textAlign: "center", fontWeight: "bold" },
+  predictionCard: {
+    width: "100%",
+    backgroundColor: "#f0f0f0",
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#999",
+  },
+  sectionTitle: { fontWeight: "bold", fontSize: 16, marginTop: 12, marginBottom: 6, color: "#222" },
+  predictionText: { fontSize: 16, marginBottom: 8, color: "#333" },
 
-  predictionCard: { width: "100%", backgroundColor: "#f0f0f0", padding: 16, borderRadius: 8, marginTop: 16 },
-
-  sectionTitle: { fontWeight: "bold", marginTop: 12 },
-  predictionText: { marginTop: 6 },
-
-  formRow: { flexDirection: "row", alignItems: "center", marginTop: 6 },
-  formLabel: { width: 100 },
+  formRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
+  formLabel: { width: 100, fontSize: 14, color: "#555" },
   dotsRow: { flexDirection: "row" },
   dot: { width: 14, height: 14, borderRadius: 7, marginHorizontal: 2 },
 
-  barRow: { flexDirection: "row", marginVertical: 6 },
-  barSquare: { width: 24, height: 14, marginHorizontal: 1, borderRadius: 3 },
-  percentLine: { marginTop: 6 },
+  barRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
+  barSquare: { width: 26, height: 14, marginHorizontal: 1, borderRadius: 3 },
+  percentLine: { marginTop: 6, fontSize: 14, color: "#333" },
 });
