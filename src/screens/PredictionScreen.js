@@ -1,3 +1,4 @@
+// src/screens/PredictionScreen.js
 import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { API_URL } from "../../App";
@@ -54,13 +55,6 @@ export default function PredictionScreen({ route, navigation }) {
         }),
       });
 
-      if (response.status === 403) {
-        // ✅ Free user has already used this week's prediction → go to PremiumScreen
-        navigation.navigate("PremiumScreen");
-        setLoading(false);
-        return;
-      }
-
       const data = await response.json();
 
       if (response.ok) {
@@ -69,15 +63,18 @@ export default function PredictionScreen({ route, navigation }) {
           reasoning: data.reasoning,
           winChances: data.winChances,
           bttsPct: data.bttsPct,
-          recentForm: data.recentForm,
+          recentForm: data.recentForm
         });
+      } else if (response.status === 403) {
+        // ✅ Free user has already used prediction → redirect to Premium screen
+        navigation.navigate('Premium');
       } else {
         setPredictionData({
           score: 'N/A',
           winChances: { home: 33, draw: 34, away: 33 },
           bttsPct: 50,
           reasoning: 'Prediction unavailable',
-          recentForm: { home: [], away: [] },
+          recentForm: { home: [], away: [] }
         });
         Alert.alert("Error", data.error || "Prediction failed");
       }
@@ -88,7 +85,7 @@ export default function PredictionScreen({ route, navigation }) {
         winChances: { home: 33, draw: 34, away: 33 },
         bttsPct: 50,
         reasoning: 'Prediction unavailable',
-        recentForm: { home: [], away: [] },
+        recentForm: { home: [], away: [] }
       });
       Alert.alert("Error", "Cannot connect to backend");
     } finally {
@@ -207,18 +204,44 @@ const styles = StyleSheet.create({
   backButton: { backgroundColor: "#555", paddingVertical: 4, paddingHorizontal: 10, borderRadius: 6 },
   backButtonText: { color: "white", fontSize: 12, fontWeight: "bold" },
   versionText: { fontSize: 12, fontWeight: "bold", color: "#333" },
-  matchBox: { width: "100%", backgroundColor: "#f0f0f0", padding: 16, borderRadius: 8, borderWidth: 1, borderColor: "#999", marginBottom: 16, alignItems: "center" },
+
+  matchBox: {
+    width: "100%",
+    backgroundColor: "#f0f0f0",
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#999",
+    marginBottom: 16,
+    alignItems: "center",
+  },
   matchText: { fontWeight: "bold", fontSize: 18, color: "#333" },
   dateText: { marginTop: 4, fontSize: 14, color: "#555" },
-  button: { backgroundColor: "#333", padding: 14, borderRadius: 8, width: "100%", marginBottom: 16 },
+  button: {
+    backgroundColor: "#333",
+    padding: 14,
+    borderRadius: 8,
+    width: "100%",
+    marginBottom: 16,
+  },
   buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
-  predictionCard: { width: "100%", backgroundColor: "#f0f0f0", padding: 16, borderRadius: 8, borderWidth: 1, borderColor: "#999" },
+
+  predictionCard: {
+    width: "100%",
+    backgroundColor: "#f0f0f0",
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#999",
+  },
   sectionTitle: { fontWeight: "bold", fontSize: 16, marginTop: 12, marginBottom: 6, color: "#222" },
   predictionText: { fontSize: 16, marginBottom: 8, color: "#333" },
+
   formRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
   formLabel: { width: 100, fontSize: 14, color: "#555" },
   dotsRow: { flexDirection: "row" },
   dot: { width: 14, height: 14, borderRadius: 7, marginHorizontal: 2 },
+
   barRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
   barSquare: { width: 26, height: 14, marginHorizontal: 1, borderRadius: 3 },
   percentLine: { marginTop: 6, fontSize: 14, color: "#333" },
