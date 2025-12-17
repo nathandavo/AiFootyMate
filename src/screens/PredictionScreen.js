@@ -63,29 +63,31 @@ export default function PredictionScreen({ route, navigation }) {
           reasoning: data.reasoning,
           winChances: data.winChances,
           bttsPct: data.bttsPct,
-          recentForm: data.recentForm
+          recentForm: data.recentForm,
         });
       } else if (response.status === 403) {
-        // ✅ Free user has already used prediction → redirect to Premium screen
-        navigation.navigate('Premium');
+        // Free user already used weekly pick → go to Premium
+        navigation.navigate("Premium"); // MUST match App.js Stack.Screen name
+        return; // stop execution so N/A isn’t set
       } else {
+        // Backend failed completely → show dummy prediction
         setPredictionData({
-          score: 'N/A',
+          score: "N/A",
           winChances: { home: 33, draw: 34, away: 33 },
           bttsPct: 50,
-          reasoning: 'Prediction unavailable',
-          recentForm: { home: [], away: [] }
+          reasoning: "Prediction unavailable",
+          recentForm: { home: [], away: [] },
         });
         Alert.alert("Error", data.error || "Prediction failed");
       }
     } catch (err) {
       console.log(err);
       setPredictionData({
-        score: 'N/A',
+        score: "N/A",
         winChances: { home: 33, draw: 34, away: 33 },
         bttsPct: 50,
-        reasoning: 'Prediction unavailable',
-        recentForm: { home: [], away: [] }
+        reasoning: "Prediction unavailable",
+        recentForm: { home: [], away: [] },
       });
       Alert.alert("Error", "Cannot connect to backend");
     } finally {
