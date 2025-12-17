@@ -1,4 +1,3 @@
-// src/screens/PredictionScreen.js
 import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { API_URL } from "../../App";
@@ -32,6 +31,9 @@ export default function PredictionScreen({ route, navigation }) {
     fetchPremium();
   }, []);
 
+  // ----------------------------------------------------
+  // handlePredict — free users who already used prediction go straight to PremiumScreen
+  // ----------------------------------------------------
   const handlePredict = async () => {
     setLoading(true);
     try {
@@ -57,26 +59,46 @@ export default function PredictionScreen({ route, navigation }) {
 
       const data = await response.json();
 
+      if (response.status === 403) {
+        // Free user already used weekly prediction → go straight to PremiumScreen
+        navigation.navigate("PremiumScreen");
+        return; // Exit function so nothing else happens
+      }
+
       if (response.ok) {
-        // Got prediction
         setPredictionData({
           score: data.score,
           reasoning: data.reasoning,
           winChances: data.winChances,
           bttsPct: data.bttsPct,
-          recentForm: data.recentForm
+          recentForm: data.recentForm,
         });
       } else {
-        // Redirect free users who already used their prediction
-        navigation.navigate('PremiumScreen'); 
+        // Only show dummy prediction if backend failed for another reason
+        setPredictionData({
+          score: "N/A",
+          winChances: { home: 33, draw: 34, away: 33 },
+          bttsPct: 50,
+          reasoning: "Prediction unavailable",
+          recentForm: { home: [], away: [] },
+        });
+        Alert.alert("Error", data.error || "Prediction failed");
       }
     } catch (err) {
       console.log(err);
-      navigation.navigate('PremiumScreen'); // Just in case any error occurs, send to Premium
+      setPredictionData({
+        score: "N/A",
+        winChances: { home: 33, draw: 34, away: 33 },
+        bttsPct: 50,
+        reasoning: "Prediction unavailable",
+        recentForm: { home: [], away: [] },
+      });
+      Alert.alert("Error", "Cannot connect to backend");
     } finally {
       setLoading(false);
     }
   };
+  // ----------------------------------------------------
 
   const renderFormDots = (form) =>
     (form || []).map((f, i) => {
