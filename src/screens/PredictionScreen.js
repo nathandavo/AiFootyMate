@@ -36,54 +36,48 @@ export default function PredictionScreen({ route, navigation }) {
     setLoading(true);
     try {
       const token = passedToken || (await AsyncStorage.getItem("userToken"));
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
-      // Fetch prediction from backend if token exists
-      const predictionData = token
-        ? await fetch(`${API_URL}/predict/free`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              fixtureId: fixture.id,
-              homeTeam: fixture.home.id,
-              awayTeam: fixture.away.id,
-            }),
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              // If backend returns a score, use it; otherwise fallback to dummy
-              if (data.score) return data;
-              return {
-                score: "N/A",
-                winChances: { home: 33, draw: 34, away: 33 },
-                bttsPct: 50,
-                reasoning: "Prediction unavailable",
-                recentForm: { home: [], away: [] },
-              };
-            })
-            .catch(() => ({
-              score: "N/A",
-              winChances: { home: 33, draw: 34, away: 33 },
-              bttsPct: 50,
-              reasoning: "Prediction unavailable",
-              recentForm: { home: [], away: [] },
-            }))
-        : {
-            score: "N/A",
-            winChances: { home: 33, draw: 34, away: 33 },
-            bttsPct: 50,
-            reasoning: "Prediction unavailable",
-            recentForm: { home: [], away: [] },
-          };
+      const response = await fetch(`${API_URL}/predict/free`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          fixtureId: fixture.id,
+          homeTeam: fixture.home.id,
+          awayTeam: fixture.away.id,
+        }),
+      });
+
+      if (response.status === 403) {
+        // Free user already used weekly pick → navigate to Premium
+        navigation.navigate("Premium"); // MUST match App.js Stack.Screen name
+        return;
+      }
+
+      const data = await response.json();
 
       setPredictionData({
-        score: predictionData.score,
-        winChances: predictionData.winChances,
-        bttsPct: predictionData.bttsPct,
-        reasoning: predictionData.reasoning,
-        recentForm: predictionData.recentForm,
+        score: data.score || "N/A",
+        winChances: data.winChances || { home: 33, draw: 34, away: 33 },
+        bttsPct: data.bttsPct ?? 50,
+        reasoning: data.reasoning || "Prediction unavailable",
+        recentForm: data.recentForm || { home: [], away: [] },
+      });
+
+    } catch (err) {
+      console.log(err);
+      setPredictionData({
+        score: "N/A",
+        winChances: { home: 33, draw: 34, away: 33 },
+        bttsPct: 50,
+        reasoning: "Prediction unavailable",
+        recentForm: { home: [], away: [] },
       });
     } finally {
       setLoading(false);
