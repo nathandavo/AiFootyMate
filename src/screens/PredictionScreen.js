@@ -1,6 +1,6 @@
 // src/screens/PredictionScreen.js
 import { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { API_URL } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -36,60 +36,55 @@ export default function PredictionScreen({ route, navigation }) {
     setLoading(true);
     try {
       const token = passedToken || (await AsyncStorage.getItem("userToken"));
-      if (!token) {
-        Alert.alert("Login Required", "You must be logged in to get a prediction.");
-        setLoading(false);
-        return;
-      }
 
-      const response = await fetch(`${API_URL}/predict/free`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          fixtureId: fixture.id,
-          homeTeam: fixture.home.id,
-          awayTeam: fixture.away.id,
-        }),
-      });
+      // Fetch prediction from backend if token exists
+      const predictionData = token
+        ? await fetch(`${API_URL}/predict/free`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              fixtureId: fixture.id,
+              homeTeam: fixture.home.id,
+              awayTeam: fixture.away.id,
+            }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              // If backend returns a score, use it; otherwise fallback to dummy
+              if (data.score) return data;
+              return {
+                score: "N/A",
+                winChances: { home: 33, draw: 34, away: 33 },
+                bttsPct: 50,
+                reasoning: "Prediction unavailable",
+                recentForm: { home: [], away: [] },
+              };
+            })
+            .catch(() => ({
+              score: "N/A",
+              winChances: { home: 33, draw: 34, away: 33 },
+              bttsPct: 50,
+              reasoning: "Prediction unavailable",
+              recentForm: { home: [], away: [] },
+            }))
+        : {
+            score: "N/A",
+            winChances: { home: 33, draw: 34, away: 33 },
+            bttsPct: 50,
+            reasoning: "Prediction unavailable",
+            recentForm: { home: [], away: [] },
+          };
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setPredictionData({
-          score: data.score,
-          reasoning: data.reasoning,
-          winChances: data.winChances,
-          bttsPct: data.bttsPct,
-          recentForm: data.recentForm,
-        });
-      } else if (response.status === 403) {
-        // Free user already used weekly pick → go to Premium
-        navigation.navigate("Premium"); // MUST match App.js Stack.Screen name
-        return; // stop execution so N/A isn’t set
-      } else {
-        // Backend failed completely → show dummy prediction
-        setPredictionData({
-          score: "N/A",
-          winChances: { home: 33, draw: 34, away: 33 },
-          bttsPct: 50,
-          reasoning: "Prediction unavailable",
-          recentForm: { home: [], away: [] },
-        });
-        Alert.alert("Error", data.error || "Prediction failed");
-      }
-    } catch (err) {
-      console.log(err);
       setPredictionData({
-        score: "N/A",
-        winChances: { home: 33, draw: 34, away: 33 },
-        bttsPct: 50,
-        reasoning: "Prediction unavailable",
-        recentForm: { home: [], away: [] },
+        score: predictionData.score,
+        winChances: predictionData.winChances,
+        bttsPct: predictionData.bttsPct,
+        reasoning: predictionData.reasoning,
+        recentForm: predictionData.recentForm,
       });
-      Alert.alert("Error", "Cannot connect to backend");
     } finally {
       setLoading(false);
     }
@@ -113,7 +108,6 @@ export default function PredictionScreen({ route, navigation }) {
     if (sum !== totalSquares) {
       const diff = totalSquares - sum;
       a = Math.max(0, a + diff);
-      sum = h + d + a;
     }
 
     const squares = [];
