@@ -31,9 +31,6 @@ export default function PredictionScreen({ route, navigation }) {
     fetchPremium();
   }, []);
 
-  // ----------------------------------------------------
-  // handlePredict — free users who already used prediction go straight to PremiumScreen
-  // ----------------------------------------------------
   const handlePredict = async () => {
     setLoading(true);
     try {
@@ -57,13 +54,14 @@ export default function PredictionScreen({ route, navigation }) {
         }),
       });
 
-      const data = await response.json();
-
       if (response.status === 403) {
-        // Free user already used weekly prediction → go straight to PremiumScreen
+        // ✅ Free user has already used this week's prediction → go to PremiumScreen
         navigation.navigate("PremiumScreen");
-        return; // Exit function so nothing else happens
+        setLoading(false);
+        return;
       }
+
+      const data = await response.json();
 
       if (response.ok) {
         setPredictionData({
@@ -74,12 +72,11 @@ export default function PredictionScreen({ route, navigation }) {
           recentForm: data.recentForm,
         });
       } else {
-        // Only show dummy prediction if backend failed for another reason
         setPredictionData({
-          score: "N/A",
+          score: 'N/A',
           winChances: { home: 33, draw: 34, away: 33 },
           bttsPct: 50,
-          reasoning: "Prediction unavailable",
+          reasoning: 'Prediction unavailable',
           recentForm: { home: [], away: [] },
         });
         Alert.alert("Error", data.error || "Prediction failed");
@@ -87,10 +84,10 @@ export default function PredictionScreen({ route, navigation }) {
     } catch (err) {
       console.log(err);
       setPredictionData({
-        score: "N/A",
+        score: 'N/A',
         winChances: { home: 33, draw: 34, away: 33 },
         bttsPct: 50,
-        reasoning: "Prediction unavailable",
+        reasoning: 'Prediction unavailable',
         recentForm: { home: [], away: [] },
       });
       Alert.alert("Error", "Cannot connect to backend");
@@ -98,7 +95,6 @@ export default function PredictionScreen({ route, navigation }) {
       setLoading(false);
     }
   };
-  // ----------------------------------------------------
 
   const renderFormDots = (form) =>
     (form || []).map((f, i) => {
@@ -118,6 +114,7 @@ export default function PredictionScreen({ route, navigation }) {
     if (sum !== totalSquares) {
       const diff = totalSquares - sum;
       a = Math.max(0, a + diff);
+      sum = h + d + a;
     }
 
     const squares = [];
@@ -210,44 +207,18 @@ const styles = StyleSheet.create({
   backButton: { backgroundColor: "#555", paddingVertical: 4, paddingHorizontal: 10, borderRadius: 6 },
   backButtonText: { color: "white", fontSize: 12, fontWeight: "bold" },
   versionText: { fontSize: 12, fontWeight: "bold", color: "#333" },
-
-  matchBox: {
-    width: "100%",
-    backgroundColor: "#f0f0f0",
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#999",
-    marginBottom: 16,
-    alignItems: "center",
-  },
+  matchBox: { width: "100%", backgroundColor: "#f0f0f0", padding: 16, borderRadius: 8, borderWidth: 1, borderColor: "#999", marginBottom: 16, alignItems: "center" },
   matchText: { fontWeight: "bold", fontSize: 18, color: "#333" },
   dateText: { marginTop: 4, fontSize: 14, color: "#555" },
-  button: {
-    backgroundColor: "#333",
-    padding: 14,
-    borderRadius: 8,
-    width: "100%",
-    marginBottom: 16,
-  },
+  button: { backgroundColor: "#333", padding: 14, borderRadius: 8, width: "100%", marginBottom: 16 },
   buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
-
-  predictionCard: {
-    width: "100%",
-    backgroundColor: "#f0f0f0",
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#999",
-  },
+  predictionCard: { width: "100%", backgroundColor: "#f0f0f0", padding: 16, borderRadius: 8, borderWidth: 1, borderColor: "#999" },
   sectionTitle: { fontWeight: "bold", fontSize: 16, marginTop: 12, marginBottom: 6, color: "#222" },
   predictionText: { fontSize: 16, marginBottom: 8, color: "#333" },
-
   formRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
   formLabel: { width: 100, fontSize: 14, color: "#555" },
   dotsRow: { flexDirection: "row" },
   dot: { width: 14, height: 14, borderRadius: 7, marginHorizontal: 2 },
-
   barRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
   barSquare: { width: 26, height: 14, marginHorizontal: 1, borderRadius: 3 },
   percentLine: { marginTop: 6, fontSize: 14, color: "#333" },
